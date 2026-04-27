@@ -52,9 +52,9 @@
   .card-body{padding:18px;flex:1;min-width:0}
   .section-title{font-size:11.5px;font-weight:700;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin:0 0 8px}
 
-  /* ---------- Row 1: Counters + Today ---------- */
-  .col-counters{grid-column:span 4;display:flex;flex-direction:column;gap:20px}
-  .col-today{grid-column:span 8}
+  /* ---------- Row 2: Today + Calendar + Counters ---------- */
+  .col-counters{grid-column:span 3;display:flex;flex-direction:column;gap:20px}
+  .col-today{grid-column:span 5}
   .counter{padding:18px 20px;border:1px solid var(--border);border-radius:12px;background:#fff;display:flex;align-items:center;justify-content:space-between;gap:16px}
   .counter .lbl{font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600}
   .counter .lbl b{display:block;color:var(--navy);font-size:14px;letter-spacing:-.01em;text-transform:none;margin-top:4px;font-weight:600}
@@ -74,9 +74,9 @@
   .guest .gb span{color:var(--navy);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .empty{padding:28px;text-align:center;color:var(--muted);font-size:13px;border:1px dashed var(--border);border-radius:10px}
 
-  /* ---------- Row 2: Calendar + Data ---------- */
-  .col-cal{grid-column:span 5}
-  .col-data{grid-column:span 7}
+  /* ---------- Row 1: Data (bar + donuts) full width ---------- */
+  .col-cal{grid-column:span 4}
+  .col-data{grid-column:span 12}
   .cal-nav{display:flex;align-items:center;gap:8px}
   .cal-nav button{appearance:none;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);color:#fff;width:26px;height:26px;border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:14px;transition:background-color .15s}
   .cal-nav button:hover{background:rgba(255,255,255,.32)}
@@ -162,54 +162,7 @@
     </div>
 
     <section class="content">
-      <!-- Row 1 -->
-      <div class="col-counters">
-        <div class="counter">
-          <div class="lbl">This Week<b>Accommodated guests</b></div>
-          <div style="text-align:right">
-            <div class="num" id="cWeek">—</div>
-            <div class="sub" id="cWeekRange">—</div>
-          </div>
-        </div>
-        <div class="counter alt">
-          <div class="lbl">This Month<b>Accommodated guests</b></div>
-          <div style="text-align:right">
-            <div class="num" id="cMonth">—</div>
-            <div class="sub" id="cMonthRange">—</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-today card" id="today">
-        <div class="card-head navy">
-          Today's Guests <span class="meta" id="todayMeta">—</span>
-        </div>
-        <div class="card-body">
-          <div id="todayList" class="today-list">
-            <div class="empty">Loading reservations…</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Row 2 -->
-      <div class="col-cal card" id="calendar">
-        <div class="card-head">
-          <span>Calendar</span>
-          <div class="cal-nav">
-            <button id="calPrev" aria-label="Previous month">‹</button>
-            <span class="month" id="calMonth">—</span>
-            <button id="calNext" aria-label="Next month">›</button>
-          </div>
-        </div>
-        <div class="card-body">
-          <div class="cal-grid" id="calGrid"></div>
-          <div class="cal-legend">
-            <span class="sw"><span class="box"></span> Has reservation</span>
-            <span class="sw"><span class="box today"></span> Today</span>
-          </div>
-        </div>
-      </div>
-
+      <!-- Row 1: Data (bar + donuts) -->
       <div class="col-data card">
         <div class="card-head navy">Data <span class="meta">Approved reservations</span></div>
         <div class="card-body">
@@ -231,6 +184,53 @@
               </div>
               <div class="canvas-box"><canvas id="barChart"></canvas></div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Row 2: Today's Guests + Calendar + Counters -->
+      <div class="col-today card" id="today">
+        <div class="card-head navy">
+          Today's Guests <span class="meta" id="todayMeta">—</span>
+        </div>
+        <div class="card-body">
+          <div id="todayList" class="today-list">
+            <div class="empty">Loading reservations…</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-cal card" id="calendar">
+        <div class="card-head">
+          <span>Calendar</span>
+          <div class="cal-nav">
+            <button id="calPrev" aria-label="Previous month">‹</button>
+            <span class="month" id="calMonth">—</span>
+            <button id="calNext" aria-label="Next month">›</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="cal-grid" id="calGrid"></div>
+          <div class="cal-legend">
+            <span class="sw"><span class="box"></span> Has reservation</span>
+            <span class="sw"><span class="box today"></span> Today</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-counters">
+        <div class="counter">
+          <div class="lbl">This Week<b>Accommodated guests</b></div>
+          <div style="text-align:right">
+            <div class="num" id="cWeek">—</div>
+            <div class="sub" id="cWeekRange">—</div>
+          </div>
+        </div>
+        <div class="counter alt">
+          <div class="lbl">This Month<b>Accommodated guests</b></div>
+          <div style="text-align:right">
+            <div class="num" id="cMonth">—</div>
+            <div class="sub" id="cMonthRange">—</div>
           </div>
         </div>
       </div>
