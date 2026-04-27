@@ -1,0 +1,644 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Salazar Admin · Live Operations Dashboard</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#F8FAFC; --surface:#FFFFFF; --border:#E2E8F0;
+    --orange:#E8651F; --orange-soft:#FFF1E8;
+    --navy:#1F3A5F; --navy-soft:#E8EDF3;
+    --muted:#64748B; --slate-100:#F1F5F9; --slate-200:#E2E8F0;
+    --green:#10B981; --green-soft:#D1FAE5;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--navy);font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
+
+  /* ---------- Layout ---------- */
+  .app{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+  .sidebar{background:#fff;border-right:1px solid var(--border);position:relative;padding:24px 20px;display:flex;flex-direction:column;gap:24px}
+  .sidebar::before{content:"";position:absolute;inset:0 auto 0 0;width:4px;background:var(--orange)}
+  .brand{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:13px;font-weight:600;letter-spacing:.08em;color:var(--orange);text-transform:uppercase}
+  .brand small{display:block;font-family:'Inter',sans-serif;font-weight:600;color:var(--navy);font-size:11px;letter-spacing:.12em;margin-top:4px;opacity:.7}
+  .nav{display:flex;flex-direction:column;gap:2px;margin-top:8px}
+  .nav a{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;color:var(--navy);font-size:13.5px;font-weight:500;text-decoration:none;transition:background-color .15s}
+  .nav a:hover{background:var(--slate-100)}
+  .nav a.active{background:var(--navy-soft);color:var(--navy);font-weight:600}
+  .nav a span.dot{width:6px;height:6px;border-radius:99px;background:var(--orange)}
+  .side-foot{margin-top:auto;font-size:11px;color:var(--muted);line-height:1.5}
+
+  .main{display:flex;flex-direction:column;min-width:0}
+  .header{display:flex;align-items:center;justify-content:space-between;height:80px;padding:0 28px;border-bottom:1px solid var(--border);background:#fff}
+  .header h1{margin:0;font-size:22px;font-weight:600;letter-spacing:-.02em}
+  .header p{margin:2px 0 0;font-size:13px;color:var(--muted)}
+  .sync{display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--navy);background:#fff;border:1px solid var(--border);padding:7px 12px;border-radius:99px}
+  .sync .dot{width:8px;height:8px;border-radius:99px;background:var(--green);box-shadow:0 0 0 3px rgba(16,185,129,.18)}
+  .sync.error .dot{background:#ef4444;box-shadow:0 0 0 3px rgba(239,68,68,.18)}
+  .sync.loading .dot{background:#f59e0b;box-shadow:0 0 0 3px rgba(245,158,11,.18)}
+
+  .content{padding:24px 28px;display:grid;grid-template-columns:repeat(12,1fr);gap:20px}
+
+  /* ---------- Card primitives ---------- */
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;min-width:0}
+  .card-head{padding:14px 18px;font-size:12.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#fff;background:var(--orange);display:flex;align-items:center;justify-content:space-between}
+  .card-head.navy{background:var(--navy)}
+  .card-head .meta{font-weight:500;font-size:11.5px;letter-spacing:.04em;text-transform:none;opacity:.85}
+  .card-body{padding:18px;flex:1;min-width:0}
+  .section-title{font-size:11.5px;font-weight:700;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin:0 0 8px}
+
+  /* ---------- Row 1: Counters + Today ---------- */
+  .col-counters{grid-column:span 4;display:flex;flex-direction:column;gap:20px}
+  .col-today{grid-column:span 8}
+  .counter{padding:18px 20px;border:1px solid var(--border);border-radius:12px;background:#fff;display:flex;align-items:center;justify-content:space-between;gap:16px}
+  .counter .lbl{font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600}
+  .counter .lbl b{display:block;color:var(--navy);font-size:14px;letter-spacing:-.01em;text-transform:none;margin-top:4px;font-weight:600}
+  .counter .num{font-size:42px;font-weight:800;letter-spacing:-.04em;color:var(--navy);line-height:1}
+  .counter.alt .num{color:var(--orange)}
+  .counter .sub{font-size:11px;color:var(--muted);margin-top:4px}
+
+  .today-list{display:flex;flex-direction:column;gap:10px;max-height:340px;overflow:auto;padding-right:4px}
+  .today-list::-webkit-scrollbar{width:6px}
+  .today-list::-webkit-scrollbar-thumb{background:var(--slate-200);border-radius:99px}
+  .guest{border:1px solid var(--border);border-radius:10px;overflow:hidden;background:#fff}
+  .guest .gh{background:var(--navy);color:#fff;padding:9px 14px;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .guest .gh .room{font-size:11px;font-weight:500;opacity:.85;letter-spacing:.04em}
+  .guest .gb{padding:10px 14px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px 18px;font-size:12.5px}
+  .guest .gb div{display:flex;flex-direction:column;gap:2px;min-width:0}
+  .guest .gb label{font-size:10.5px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;font-weight:600}
+  .guest .gb span{color:var(--navy);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .empty{padding:28px;text-align:center;color:var(--muted);font-size:13px;border:1px dashed var(--border);border-radius:10px}
+
+  /* ---------- Row 2: Calendar + Data ---------- */
+  .col-cal{grid-column:span 5}
+  .col-data{grid-column:span 7}
+  .cal-nav{display:flex;align-items:center;gap:8px}
+  .cal-nav button{appearance:none;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);color:#fff;width:26px;height:26px;border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:14px;transition:background-color .15s}
+  .cal-nav button:hover{background:rgba(255,255,255,.32)}
+  .cal-nav .month{font-size:13px;font-weight:600;letter-spacing:.02em;text-transform:none;min-width:140px;text-align:center}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+  .cal-grid .dow{font-size:11px;font-weight:700;color:var(--muted);text-align:center;padding:6px 0;letter-spacing:.06em}
+  .cal-grid .day{aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--navy);border-radius:8px;background:#fff;border:1px solid transparent;font-weight:500;position:relative}
+  .cal-grid .day.muted{color:#cbd5e1}
+  .cal-grid .day.today{border-color:var(--orange);color:var(--orange);font-weight:700}
+  .cal-grid .day.booked{background:var(--green-soft);color:#065f46;font-weight:700;border-color:#a7f3d0}
+  .cal-grid .day.booked.today{outline:2px solid var(--orange);outline-offset:-2px}
+  .cal-legend{display:flex;align-items:center;gap:14px;margin-top:12px;font-size:11.5px;color:var(--muted)}
+  .cal-legend .sw{display:inline-flex;align-items:center;gap:6px}
+  .cal-legend .box{width:12px;height:12px;border-radius:3px;background:var(--green-soft);border:1px solid #a7f3d0}
+  .cal-legend .box.today{background:#fff;border-color:var(--orange)}
+
+  .data-grid{display:grid;grid-template-columns:1fr 1fr 2fr;gap:18px;align-items:stretch}
+  .donut-wrap{border:1px solid var(--border);border-radius:10px;padding:14px;display:flex;flex-direction:column;align-items:center;gap:8px;min-width:0}
+  .donut-wrap canvas{max-width:140px;max-height:140px}
+  .donut-wrap .donut-num{font-size:22px;font-weight:800;color:var(--navy);letter-spacing:-.03em;margin-top:-2px}
+  .donut-wrap .donut-lbl{font-size:11.5px;color:var(--muted);font-weight:600;letter-spacing:.06em;text-transform:uppercase;text-align:center}
+  .bar-wrap{border:1px solid var(--border);border-radius:10px;padding:14px;min-width:0;display:flex;flex-direction:column}
+  .bar-wrap .bar-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+  .bar-wrap .bar-head h4{margin:0;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+  .bar-wrap .bar-head .yr{font-size:12px;color:var(--navy);font-weight:600}
+  .bar-wrap .canvas-box{flex:1;min-height:160px;position:relative}
+
+  /* ---------- Row 3: Line ---------- */
+  .col-line{grid-column:span 12}
+  .line-wrap{height:280px;position:relative}
+
+  /* ---------- Skeleton ---------- */
+  @keyframes pulse{0%{opacity:.55}50%{opacity:1}100%{opacity:.55}}
+  .skeleton{background:var(--slate-200);border-radius:6px;animation:pulse 1.2s ease-in-out infinite}
+
+  @media (max-width: 1100px){
+    .col-counters,.col-today,.col-cal,.col-data,.col-line{grid-column:span 12}
+    .data-grid{grid-template-columns:1fr 1fr}
+    .data-grid .bar-wrap{grid-column:span 2}
+  }
+  @media (max-width: 720px){
+    .app{grid-template-columns:1fr}
+    .sidebar{display:none}
+    .header{padding:0 16px;height:auto;flex-direction:column;align-items:flex-start;gap:6px;padding:14px 16px}
+    .content{padding:16px}
+    .data-grid{grid-template-columns:1fr}
+    .data-grid .bar-wrap{grid-column:span 1}
+    .guest .gb{grid-template-columns:1fr 1fr}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="brand">
+      Salazar Ops
+      <small>Escaping Paradise</small>
+    </div>
+    <nav class="nav" aria-label="Primary">
+      <a href="#" class="active"><span class="dot"></span>Dashboard</a>
+      <a href="#today">Today's Guests</a>
+      <a href="#calendar">Calendar</a>
+      <a href="#trends">Room Utilization</a>
+      <a href="salazar-escaping-paradise.html">Public Site ↗</a>
+    </nav>
+    <div class="side-foot">
+      Read-only mirror of the master Google Sheet. Updates require editing the sheet directly.
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <div class="header">
+      <div>
+        <h1>Live Operations Dashboard</h1>
+        <p>Real-time readouts from the master reservations sheet.</p>
+      </div>
+      <div id="syncChip" class="sync loading" title="Last sync time">
+        <span class="dot"></span>
+        <span id="syncText">Syncing with Google Sheets…</span>
+      </div>
+    </div>
+
+    <section class="content">
+      <!-- Row 1 -->
+      <div class="col-counters">
+        <div class="counter">
+          <div class="lbl">This Week<b>Accommodated guests</b></div>
+          <div style="text-align:right">
+            <div class="num" id="cWeek">—</div>
+            <div class="sub" id="cWeekRange">—</div>
+          </div>
+        </div>
+        <div class="counter alt">
+          <div class="lbl">This Month<b>Accommodated guests</b></div>
+          <div style="text-align:right">
+            <div class="num" id="cMonth">—</div>
+            <div class="sub" id="cMonthRange">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-today card" id="today">
+        <div class="card-head navy">
+          Today's Guests <span class="meta" id="todayMeta">—</span>
+        </div>
+        <div class="card-body">
+          <div id="todayList" class="today-list">
+            <div class="empty">Loading reservations…</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Row 2 -->
+      <div class="col-cal card" id="calendar">
+        <div class="card-head">
+          <span>Calendar</span>
+          <div class="cal-nav">
+            <button id="calPrev" aria-label="Previous month">‹</button>
+            <span class="month" id="calMonth">—</span>
+            <button id="calNext" aria-label="Next month">›</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="cal-grid" id="calGrid"></div>
+          <div class="cal-legend">
+            <span class="sw"><span class="box"></span> Has reservation</span>
+            <span class="sw"><span class="box today"></span> Today</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-data card">
+        <div class="card-head navy">Data <span class="meta">Approved reservations</span></div>
+        <div class="card-body">
+          <div class="data-grid">
+            <div class="donut-wrap">
+              <canvas id="donutMonth" width="140" height="140"></canvas>
+              <div class="donut-num" id="donutMonthNum">—</div>
+              <div class="donut-lbl">Monthly Approved</div>
+            </div>
+            <div class="donut-wrap">
+              <canvas id="donutWeek" width="140" height="140"></canvas>
+              <div class="donut-num" id="donutWeekNum">—</div>
+              <div class="donut-lbl">Weekly Approved</div>
+            </div>
+            <div class="bar-wrap">
+              <div class="bar-head">
+                <h4>Reservations / month</h4>
+                <span class="yr" id="barYear">—</span>
+              </div>
+              <div class="canvas-box"><canvas id="barChart"></canvas></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Row 3 -->
+      <div class="col-line card" id="trends">
+        <div class="card-head navy">Most Used Rooms / Cottages <span class="meta" id="lineMeta">Top 5 · last 12 months</span></div>
+        <div class="card-body">
+          <div class="line-wrap"><canvas id="lineChart"></canvas></div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+/* =========================================================
+   Salazar Admin — single-file dashboard
+   Reads the same Google Sheet as the public site.
+   Sheet columns: Rooms, Date In, Check In, Check Out, Date Out,
+                  Name, Mobile, Email, File, Status, Accomodated
+   ========================================================= */
+const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1mXEJbzdOHjlrObqO3I5ehe6UigU18CEC6LAUAQ4NzDE/export?format=csv&gid=0";
+
+/* ---------- CSV parsing ---------- */
+function parseCSV(text){
+  const out=[]; let row=[],cur='',inQ=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i];
+    if(inQ){
+      if(c==='"' && text[i+1]==='"'){cur+='"';i++}
+      else if(c==='"'){inQ=false}
+      else cur+=c;
+    } else {
+      if(c==='"') inQ=true;
+      else if(c===','){row.push(cur);cur=''}
+      else if(c==='\n'){row.push(cur);out.push(row);row=[];cur=''}
+      else if(c!=='\r') cur+=c;
+    }
+  }
+  if(cur.length||row.length){row.push(cur);out.push(row)}
+  return out;
+}
+
+/* ---------- Date helpers ---------- */
+function ymd(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
+function parseDateStr(s){
+  if(!s) return null;
+  s=String(s).trim();
+  let m;
+  if((m=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/))) return new Date(+m[1],+m[2]-1,+m[3]);
+  if((m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/))) return new Date(+m[3],+m[1]-1,+m[2]);
+  const d=new Date(s); return isNaN(d)?null:d;
+}
+function parseTimeParts(s){
+  if(!s && s!==0) return null;
+  s=String(s).trim();
+  const m=s.match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM|am|pm)?$/);
+  if(m){
+    let h=parseInt(m[1],10);const mi=parseInt(m[2],10);const ap=(m[3]||'').toUpperCase();
+    if(ap==='PM' && h<12) h+=12; if(ap==='AM' && h===12) h=0;
+    return {h,mi};
+  }
+  return null;
+}
+function combineDT(dateStr,timeStr){
+  const d=parseDateStr(dateStr); if(!d) return null;
+  const t=parseTimeParts(timeStr); if(t) d.setHours(t.h,t.mi,0,0); else d.setHours(0,0,0,0);
+  return d;
+}
+function startOfDay(d){const x=new Date(d);x.setHours(0,0,0,0);return x}
+function startOfWeek(d){ // Mon as start
+  const x=startOfDay(d); const day=(x.getDay()+6)%7; x.setDate(x.getDate()-day); return x;
+}
+function endOfWeek(d){ const x=startOfWeek(d); x.setDate(x.getDate()+6); x.setHours(23,59,59,999); return x; }
+function startOfMonth(d){return new Date(d.getFullYear(),d.getMonth(),1)}
+function endOfMonth(d){return new Date(d.getFullYear(),d.getMonth()+1,0,23,59,59,999)}
+function fmtRange(a,b){
+  const f=x=>x.toLocaleDateString(undefined,{month:'short',day:'numeric'});
+  return `${f(a)} – ${f(b)}`;
+}
+function fmtTime(d){
+  if(!d) return '—';
+  return d.toLocaleTimeString([], {hour:'numeric', minute:'2-digit'});
+}
+function fmtDate(d){
+  if(!d) return '—';
+  return d.toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});
+}
+
+/* ---------- State ---------- */
+const state = {
+  rows: [],            // normalized records
+  bookedDates: new Set(), // YYYY-MM-DD strings touched by any reservation
+  calCursor: startOfMonth(new Date()),
+};
+
+/* ---------- Load ---------- */
+async function loadSheet(){
+  setSync('loading','Syncing with Google Sheets…');
+  try{
+    const url = SHEET_CSV_URL + (SHEET_CSV_URL.includes('?')?'&':'?') + '_=' + Date.now();
+    const res = await fetch(url,{cache:'no-store'});
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const txt = await res.text();
+    const rows = parseCSV(txt).filter(r=>r.length>=4 && r.some(c=>String(c||'').trim()));
+    if(!rows.length) throw new Error('Empty sheet');
+    const head = rows.shift().map(h=>String(h||'').trim().toLowerCase());
+    const idx = name => head.indexOf(name);
+    const iRoom=idx('rooms'), iDi=idx('date in'), iCi=idx('check in'),
+          iCo=idx('check out'), iDo=idx('date out'), iName=idx('name'),
+          iMob=idx('mobile'), iEm=idx('email'), iSt=idx('status'),
+          iAc=idx('accomodated');
+
+    state.rows = rows.map(r=>{
+      const room=(r[iRoom]||'').trim();
+      const start=combineDT(r[iDi], r[iCi]);
+      const end=combineDT(r[iDo], r[iCo]) || combineDT(r[iDi], r[iCo]);
+      const status=(r[iSt]||'').trim();
+      const accommodated=(r[iAc]||'').trim();
+      return {
+        room, start, end,
+        name:(r[iName]||'').trim(),
+        mobile:(r[iMob]||'').trim(),
+        email:(r[iEm]||'').trim(),
+        status,
+        statusKey: status.toLowerCase(),
+        accommodated,
+        accommodatedKey: accommodated.toLowerCase(),
+      };
+    }).filter(x=>x.room && x.start);
+
+    // Build date-occupancy set
+    state.bookedDates = new Set();
+    state.rows.forEach(r=>{
+      if(!r.start) return;
+      const a=startOfDay(r.start);
+      const b=startOfDay(r.end || r.start);
+      for(let d=new Date(a); d<=b; d.setDate(d.getDate()+1)){
+        state.bookedDates.add(ymd(d));
+      }
+    });
+
+    setSync('ok', `Synced · ${new Date().toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})}`);
+    renderAll();
+  } catch(e){
+    console.warn('Sheet load failed', e);
+    setSync('error','Could not reach Google Sheets');
+  }
+}
+function setSync(kind,text){
+  const chip=document.getElementById('syncChip');
+  chip.classList.remove('loading','error');
+  if(kind!=='ok') chip.classList.add(kind);
+  document.getElementById('syncText').textContent=text;
+}
+
+/* ---------- Render orchestration ---------- */
+function renderAll(){
+  renderToday();
+  renderCounters();
+  renderCalendar();
+  renderApprovalCharts();
+  renderLineChart();
+}
+
+/* ---------- Today's Guests ---------- */
+function renderToday(){
+  const wrap=document.getElementById('todayList');
+  const today=startOfDay(new Date());
+  const tomorrow=new Date(today); tomorrow.setDate(tomorrow.getDate()+1);
+
+  // A guest "is today" if today falls inside [start, end]
+  const list = state.rows
+    .filter(r=>{
+      if(!r.start) return false;
+      const a=startOfDay(r.start);
+      const b=startOfDay(r.end || r.start);
+      return a<=today && today<=b;
+    })
+    .sort((a,b)=> (a.start - b.start));
+
+  document.getElementById('todayMeta').textContent =
+    list.length ? `${list.length} guest${list.length>1?'s':''} · ${today.toLocaleDateString(undefined,{weekday:'long', month:'short', day:'numeric'})}`
+                : today.toLocaleDateString(undefined,{weekday:'long', month:'short', day:'numeric'});
+
+  if(!list.length){
+    wrap.innerHTML = `<div class="empty">No guests scheduled for today.</div>`;
+    return;
+  }
+
+  wrap.innerHTML = list.map(r=>{
+    const statusBadge = r.statusKey==='approved'
+      ? `<span style="background:var(--green-soft);color:#065f46;padding:2px 8px;border-radius:99px;font-size:10.5px;font-weight:600;letter-spacing:.04em">APPROVED</span>`
+      : r.status
+        ? `<span style="background:#fde68a;color:#78350f;padding:2px 8px;border-radius:99px;font-size:10.5px;font-weight:600;letter-spacing:.04em">${escapeHtml(r.status.toUpperCase())}</span>`
+        : `<span style="background:#e2e8f0;color:#475569;padding:2px 8px;border-radius:99px;font-size:10.5px;font-weight:600;letter-spacing:.04em">PENDING</span>`;
+    return `
+      <article class="guest">
+        <div class="gh">
+          <span>${escapeHtml(r.name||'Guest')}</span>
+          <span class="room">${escapeHtml(r.room)} · ${statusBadge}</span>
+        </div>
+        <div class="gb">
+          <div><label>Check-in</label><span>${fmtDate(r.start)} · ${fmtTime(r.start)}</span></div>
+          <div><label>Check-out</label><span>${fmtDate(r.end)} · ${fmtTime(r.end)}</span></div>
+          <div><label>Mobile</label><span>${escapeHtml(r.mobile||'—')}</span></div>
+        </div>
+      </article>`;
+  }).join('');
+}
+
+function escapeHtml(s){return String(s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]))}
+
+/* ---------- Counters ---------- */
+function renderCounters(){
+  const now=new Date();
+  const wA=startOfWeek(now), wB=endOfWeek(now);
+  const mA=startOfMonth(now), mB=endOfMonth(now);
+  // "Accommodated" guests = rows with Accomodated == "Yes" whose stay overlaps the period
+  const inRange=(r,a,b)=>{
+    if(!r.start) return false;
+    const s=r.start, e=r.end||r.start;
+    return s<=b && e>=a;
+  };
+  const yes = state.rows.filter(r=>r.accommodatedKey==='yes');
+  const week = yes.filter(r=>inRange(r,wA,wB)).length;
+  const month = yes.filter(r=>inRange(r,mA,mB)).length;
+
+  document.getElementById('cWeek').textContent = week;
+  document.getElementById('cMonth').textContent = month;
+  document.getElementById('cWeekRange').textContent = fmtRange(wA,wB);
+  document.getElementById('cMonthRange').textContent = now.toLocaleDateString(undefined,{month:'long', year:'numeric'});
+}
+
+/* ---------- Calendar ---------- */
+function renderCalendar(){
+  const cur=state.calCursor;
+  const monthLbl=cur.toLocaleDateString(undefined,{month:'long',year:'numeric'});
+  document.getElementById('calMonth').textContent=monthLbl;
+  const grid=document.getElementById('calGrid');
+  const dows=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  let html = dows.map(d=>`<div class="dow">${d}</div>`).join('');
+
+  const first=startOfMonth(cur);
+  const last=endOfMonth(cur);
+  // Monday-first offset
+  const lead=(first.getDay()+6)%7;
+  // previous-month padding
+  for(let i=lead;i>0;i--){
+    const d=new Date(first); d.setDate(d.getDate()-i);
+    html += `<div class="day muted">${d.getDate()}</div>`;
+  }
+  const today=ymd(startOfDay(new Date()));
+  for(let day=1; day<=last.getDate(); day++){
+    const d=new Date(cur.getFullYear(),cur.getMonth(),day);
+    const key=ymd(d);
+    const cls=['day'];
+    if(state.bookedDates.has(key)) cls.push('booked');
+    if(key===today) cls.push('today');
+    html += `<div class="${cls.join(' ')}" title="${state.bookedDates.has(key)?'Has reservation':''}">${day}</div>`;
+  }
+  // trailing pad to complete final row
+  const total = lead + last.getDate();
+  const trail = (7 - (total % 7)) % 7;
+  for(let i=1;i<=trail;i++){
+    const d=new Date(last); d.setDate(d.getDate()+i);
+    html += `<div class="day muted">${d.getDate()}</div>`;
+  }
+  grid.innerHTML = html;
+}
+
+/* ---------- Charts ---------- */
+let charts={};
+function donut(ctx, approved, total, color){
+  const data = total>0 ? [approved, Math.max(total-approved,0)] : [0,1];
+  return new Chart(ctx,{
+    type:'doughnut',
+    data:{ datasets:[{ data, backgroundColor:[color,'#1F3A5F'], borderWidth:0, cutout:'68%' }] },
+    options:{
+      animation:{duration:400,easing:'easeOutQuart'},
+      plugins:{legend:{display:false}, tooltip:{enabled:false}},
+      responsive:true, maintainAspectRatio:false
+    }
+  });
+}
+
+function renderApprovalCharts(){
+  const now=new Date();
+  const wA=startOfWeek(now), wB=endOfWeek(now);
+  const mA=startOfMonth(now), mB=endOfMonth(now);
+  const inR=(r,a,b)=>{ if(!r.start) return false; const s=r.start,e=r.end||r.start; return s<=b && e>=a; };
+
+  const monthRows = state.rows.filter(r=>inR(r,mA,mB));
+  const weekRows  = state.rows.filter(r=>inR(r,wA,wB));
+  const monthApp  = monthRows.filter(r=>r.statusKey==='approved').length;
+  const weekApp   = weekRows.filter(r=>r.statusKey==='approved').length;
+
+  document.getElementById('donutMonthNum').textContent = `${monthApp}/${monthRows.length}`;
+  document.getElementById('donutWeekNum').textContent  = `${weekApp}/${weekRows.length}`;
+
+  // (Re)draw donuts
+  if(charts.donutMonth) charts.donutMonth.destroy();
+  if(charts.donutWeek) charts.donutWeek.destroy();
+  charts.donutMonth = donut(document.getElementById('donutMonth'), monthApp, Math.max(monthRows.length,1), '#E8651F');
+  charts.donutWeek  = donut(document.getElementById('donutWeek'),  weekApp,  Math.max(weekRows.length,1),  '#E8651F');
+
+  // Bar: reservations per month for current year
+  const yr = now.getFullYear();
+  document.getElementById('barYear').textContent = yr;
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const counts = new Array(12).fill(0);
+  state.rows.forEach(r=>{
+    if(!r.start) return;
+    if(r.start.getFullYear()===yr) counts[r.start.getMonth()]++;
+  });
+  if(charts.bar) charts.bar.destroy();
+  charts.bar = new Chart(document.getElementById('barChart'),{
+    type:'bar',
+    data:{ labels:months, datasets:[{ data:counts, backgroundColor:'#E8651F', borderRadius:4, barPercentage:.7, categoryPercentage:.7 }] },
+    options:{
+      animation:{duration:400,easing:'easeOutQuart'},
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false}, tooltip:{
+        callbacks:{ label:c=>`${c.parsed.y} reservation${c.parsed.y===1?'':'s'}` }
+      }},
+      scales:{
+        x:{ grid:{display:false}, ticks:{color:'#1F3A5F', font:{size:10, weight:'600'}} },
+        y:{ beginAtZero:true, grid:{color:'#E2E8F0'}, ticks:{color:'#64748B', font:{size:10}, precision:0, stepSize:1} }
+      }
+    }
+  });
+}
+
+/* ---------- Line Chart: Most used rooms ---------- */
+function renderLineChart(){
+  // Top 5 rooms by total reservations across all data
+  const totals={};
+  state.rows.forEach(r=>{ totals[r.room]=(totals[r.room]||0)+1 });
+  const topRooms = Object.entries(totals).sort((a,b)=>b[1]-a[1]).slice(0,5).map(x=>x[0]);
+
+  // Last 12 months (including current), oldest -> newest
+  const now=new Date();
+  const months=[];
+  for(let i=11;i>=0;i--){
+    const d=new Date(now.getFullYear(), now.getMonth()-i, 1);
+    months.push(d);
+  }
+  const labels = months.map(d=>d.toLocaleDateString(undefined,{month:'short', year:'2-digit'}));
+
+  const palette = ['#E8651F','#1F3A5F','#10B981','#6366F1','#F59E0B'];
+  const datasets = topRooms.map((room,idx)=>{
+    const data = months.map(m=>{
+      const a=startOfMonth(m), b=endOfMonth(m);
+      return state.rows.filter(r=>r.room===room && r.start && r.start>=a && r.start<=b).length;
+    });
+    return {
+      label: room,
+      data,
+      borderColor: palette[idx],
+      backgroundColor: palette[idx]+'22',
+      tension: .3,
+      borderWidth: 2.2,
+      pointRadius: 3,
+      pointHoverRadius: 5,
+      pointBackgroundColor: palette[idx],
+      fill: false
+    };
+  });
+
+  document.getElementById('lineMeta').textContent = topRooms.length
+    ? `Top ${topRooms.length} · last 12 months`
+    : 'No reservation data yet';
+
+  if(charts.line) charts.line.destroy();
+  charts.line = new Chart(document.getElementById('lineChart'),{
+    type:'line',
+    data:{ labels, datasets },
+    options:{
+      animation:{duration:400,easing:'easeOutQuart'},
+      responsive:true, maintainAspectRatio:false,
+      interaction:{mode:'index', intersect:false},
+      plugins:{
+        legend:{position:'bottom', labels:{color:'#1F3A5F', boxWidth:10, boxHeight:10, font:{size:11, weight:'500'}, padding:14}},
+        tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${c.parsed.y}`}}
+      },
+      scales:{
+        x:{ grid:{display:false}, ticks:{color:'#64748B', font:{size:10}} },
+        y:{ beginAtZero:true, grid:{color:'#E2E8F0'}, ticks:{color:'#64748B', font:{size:10}, precision:0, stepSize:1} }
+      }
+    }
+  });
+}
+
+/* ---------- Calendar nav ---------- */
+document.getElementById('calPrev').addEventListener('click', ()=>{
+  state.calCursor = new Date(state.calCursor.getFullYear(), state.calCursor.getMonth()-1, 1);
+  renderCalendar();
+});
+document.getElementById('calNext').addEventListener('click', ()=>{
+  state.calCursor = new Date(state.calCursor.getFullYear(), state.calCursor.getMonth()+1, 1);
+  renderCalendar();
+});
+
+/* ---------- Boot ---------- */
+loadSheet();
+// Auto-refresh every 60s
+setInterval(loadSheet, 60_000);
+</script>
+</body>
+</html>
