@@ -126,6 +126,124 @@
     .data-grid .bar-wrap{grid-column:span 1}
     .guest .gb{grid-template-columns:1fr 1fr}
   }
+
+  /* ---------- View switcher ---------- */
+  .view{display:none}
+  .view.active{display:block}
+
+  /* ---------- Reservation view ---------- */
+  .res-page{padding:24px 28px;display:flex;flex-direction:column;gap:20px}
+  .res-top{display:flex;align-items:center;justify-content:space-between;gap:16px}
+  .res-top h2{margin:0;font-size:26px;font-weight:800;letter-spacing:-.02em;color:#0f172a}
+  .btn-add{appearance:none;border:none;background:var(--orange);color:#fff;font-weight:700;font-size:14px;padding:10px 22px;border-radius:99px;cursor:pointer;box-shadow:0 4px 12px rgba(232,101,31,.28);transition:transform .15s, box-shadow .15s}
+  .btn-add:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(232,101,31,.36)}
+
+  .res-overview{background:#fff;border:1px solid var(--border);border-radius:14px;padding:18px 20px;display:grid;grid-template-columns:auto 1fr;gap:24px;align-items:stretch}
+  .res-overview .yr-label{font-size:12px;color:var(--muted);font-weight:600;letter-spacing:.04em;align-self:flex-start}
+  .res-stats{display:flex;gap:16px;align-items:center}
+  .stat-tile{width:110px;height:110px;border-radius:18px;border:2px solid;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+  .stat-tile .num{font-size:54px;font-weight:800;line-height:1;letter-spacing:-.04em}
+  .stat-tile.approved{border-color:#3b82f6} .stat-tile.approved .num{color:#3b82f6}
+  .stat-tile.pending{border-color:#10b981}  .stat-tile.pending .num{color:#10b981}
+  .stat-tile.rejected{border-color:#ef4444} .stat-tile.rejected .num{color:#ef4444}
+  .stat-tile + .stat-lbl{font-size:12px;color:#0f172a;text-align:center;margin-top:6px;font-weight:500}
+  .res-stat-col{display:flex;flex-direction:column;align-items:center}
+  .res-stat-col .stat-lbl{font-size:13px;color:#0f172a;margin-top:8px}
+
+  .res-monthly{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px}
+  .res-monthly h4{margin:0;font-size:14px;font-weight:600;color:#0f172a}
+  .res-monthly .chart-box{flex:1;min-height:180px;border:1px solid var(--border);border-radius:10px;padding:10px}
+  .res-monthly .chart-box canvas{width:100%!important;height:100%!important}
+
+  /* Table */
+  .res-table-wrap{background:transparent;border-radius:12px;overflow:hidden}
+  .res-thead, .res-row{display:grid;grid-template-columns:60px 1.2fr .9fr .9fr .8fr .8fr 1fr 1.4fr 1.3fr 110px 60px;align-items:center;gap:6px}
+  .res-thead{padding:8px 14px;font-size:13px;font-weight:600;color:#0f172a;border-bottom:1px solid var(--border);background:transparent}
+  .res-thead > div{padding:4px 6px;border-left:1px solid #e2e8f0}
+  .res-thead > div:first-child{border-left:none}
+  .res-rows{display:flex;flex-direction:column;gap:8px;padding:10px 0}
+  .res-row{padding:10px 14px;border:1px solid var(--border);border-radius:999px;background:#fff;font-size:12.5px;color:#0f172a}
+  .res-row > div{padding:0 6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+  .status-pill{position:relative;display:inline-flex;align-items:center;justify-content:center;border-radius:99px;padding:4px 10px;font-size:11px;font-weight:700;color:#fff;letter-spacing:.04em;width:100px;cursor:pointer}
+  .status-pill.approved{background:#2563eb}
+  .status-pill.pending{background:#10b981}
+  .status-pill.rejected{background:#ef4444}
+  .status-pill select{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+  .status-pill .caret{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;background:rgba(255,255,255,.25);border-radius:99px;margin-left:6px;font-size:9px}
+
+  .eye-btn{appearance:none;border:none;background:transparent;color:var(--orange);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:4px;border-radius:6px}
+  .eye-btn:hover{background:#fff1e8}
+  .eye-btn[disabled]{opacity:.3;cursor:not-allowed}
+
+  /* Generic modal */
+  .modal{position:fixed;inset:0;background:rgba(15,23,42,.55);display:none;align-items:center;justify-content:center;z-index:1000;padding:20px}
+  .modal.show{display:flex}
+  .modal-card{background:#fff;border-radius:14px;max-width:920px;width:100%;max-height:92vh;overflow:auto;box-shadow:0 30px 80px rgba(0,0,0,.35)}
+  .modal-head{display:flex;align-items:center;justify-content:space-between;padding:16px 22px;border-bottom:1px solid var(--border);position:sticky;top:0;background:#fff;z-index:2}
+  .modal-head h3{margin:0;font-size:18px;font-weight:700;color:var(--navy)}
+  .modal-x{appearance:none;border:none;background:#f1f5f9;width:32px;height:32px;border-radius:99px;cursor:pointer;font-size:18px;color:#475569}
+  .modal-body{padding:20px 22px}
+
+  /* Image proof viewer */
+  #proofModal .modal-card{max-width:720px}
+  #proofModal img{display:block;max-width:100%;max-height:75vh;margin:0 auto;border-radius:8px}
+
+  /* Reservation form */
+  .rf-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .rf-field{display:flex;flex-direction:column;gap:6px}
+  .rf-field label{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+  .rf-field input,.rf-field textarea,.rf-field select{padding:10px 12px;border:1px solid var(--border);border-radius:8px;font:inherit;color:var(--navy);background:#fff;outline:none}
+  .rf-field input:focus,.rf-field textarea:focus,.rf-field select:focus{border-color:var(--orange);box-shadow:0 0 0 3px rgba(232,101,31,.15)}
+  .rf-section-title{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--orange);margin:18px 0 10px}
+
+  /* Calendar in form */
+  .rf-cal{border:1px solid var(--border);border-radius:10px;padding:14px;background:#fff}
+  .rf-cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+  .rf-cal-head button{appearance:none;border:1px solid var(--border);background:#fff;width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:14px;color:var(--navy)}
+  .rf-cal-head .lbl{font-size:13px;font-weight:700;color:var(--navy)}
+  .rf-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+  .rf-cal-grid .dow{font-size:10.5px;font-weight:700;color:var(--muted);text-align:center;padding:4px 0}
+  .rf-cal-grid .d{aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--navy);border-radius:6px;cursor:pointer;background:#f8fafc;border:1px solid transparent}
+  .rf-cal-grid .d:hover{background:#fff1e8;border-color:var(--orange)}
+  .rf-cal-grid .d.muted{color:#cbd5e1;cursor:default;background:transparent}
+  .rf-cal-grid .d.muted:hover{background:transparent;border-color:transparent}
+  .rf-cal-grid .d.occupied{background:#fee2e2;color:#991b1b;cursor:not-allowed;text-decoration:line-through}
+  .rf-cal-grid .d.occupied:hover{background:#fee2e2;border-color:transparent}
+  .rf-cal-grid .d.in-range{background:#fff1e8;color:var(--orange)}
+  .rf-cal-grid .d.range-end,.rf-cal-grid .d.range-start{background:var(--orange);color:#fff;font-weight:700}
+
+  /* Selected accommodations */
+  .rf-pick-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+  .rf-pick{border:1px solid var(--border);border-radius:10px;padding:10px;cursor:pointer;background:#fff;text-align:left;transition:border-color .15s}
+  .rf-pick:hover{border-color:var(--orange)}
+  .rf-pick.selected{border-color:var(--orange);background:#fff8f3}
+  .rf-pick h5{margin:0 0 4px;font-size:13px;color:var(--navy)}
+  .rf-pick .meta{font-size:11px;color:var(--muted)}
+  .rf-pick .price{margin-top:6px;font-weight:700;color:var(--orange);font-size:13px}
+
+  .rf-summary{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;background:#fff8f3;border:1px dashed var(--orange);border-radius:10px;margin-top:14px}
+  .rf-summary b{font-size:18px;color:var(--orange)}
+  .rf-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px;padding-top:14px;border-top:1px solid var(--border)}
+  .rf-btn{appearance:none;border:none;padding:10px 22px;border-radius:99px;font-weight:700;font-size:13px;cursor:pointer}
+  .rf-btn.primary{background:var(--orange);color:#fff}
+  .rf-btn.ghost{background:#f1f5f9;color:var(--navy)}
+  .rf-btn[disabled]{opacity:.55;cursor:not-allowed}
+
+  .rf-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#0f172a;color:#fff;padding:12px 20px;border-radius:99px;font-size:13px;z-index:2000;box-shadow:0 10px 30px rgba(0,0,0,.3);display:none}
+  .rf-toast.show{display:block;animation:toast-in .25s ease}
+  @keyframes toast-in{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  @media (max-width: 1100px){
+    .res-row, .res-thead{grid-template-columns:50px 1fr .8fr .8fr .7fr .7fr .9fr 1.2fr 1.1fr 100px 50px}
+  }
+  @media (max-width: 820px){
+    .res-overview{grid-template-columns:1fr}
+    .rf-grid{grid-template-columns:1fr}
+    .res-table-wrap{overflow-x:auto}
+    .res-thead, .res-row{min-width:1100px}
+  }
 </style>
 </head>
 <body>
@@ -137,10 +255,11 @@
       <small>Escaping Paradise</small>
     </div>
     <nav class="nav" aria-label="Primary">
-      <a href="#" class="active"><span class="dot"></span>Dashboard</a>
-      <a href="#today">Today's Guests</a>
-      <a href="#calendar">Calendar</a>
-      <a href="#trends">Room Utilization</a>
+      <a href="#" data-view="dashboard" class="active"><span class="dot"></span>Dashboard</a>
+      <a href="#" data-view="reservation">Reservation</a>
+      <a href="#today" data-view="dashboard">Today's Guests</a>
+      <a href="#calendar" data-view="dashboard">Calendar</a>
+      <a href="#trends" data-view="dashboard">Room Utilization</a>
       <a href="salazar-escaping-paradise.html">Public Site ↗</a>
     </nav>
     <div class="side-foot">
@@ -150,100 +269,245 @@
 
   <!-- Main -->
   <main class="main">
-    <div class="header">
-      <div>
-        <h1>Live Operations Dashboard</h1>
-        <p>Real-time readouts from the master reservations sheet.</p>
+    <!-- ============ DASHBOARD VIEW ============ -->
+    <div id="view-dashboard" class="view active">
+      <div class="header">
+        <div>
+          <h1>Live Operations Dashboard</h1>
+          <p>Real-time readouts from the master reservations sheet.</p>
+        </div>
+        <div id="syncChip" class="sync loading" title="Last sync time">
+          <span class="dot"></span>
+          <span id="syncText">Syncing with Google Sheets…</span>
+        </div>
       </div>
-      <div id="syncChip" class="sync loading" title="Last sync time">
-        <span class="dot"></span>
-        <span id="syncText">Syncing with Google Sheets…</span>
-      </div>
+
+      <section class="content">
+        <!-- Row 1: Data (bar + donuts) -->
+        <div class="col-data card">
+          <div class="card-head navy">Data <span class="meta">Approved reservations</span></div>
+          <div class="card-body">
+            <div class="data-grid">
+              <div class="donut-wrap">
+                <canvas id="donutMonth" width="140" height="140"></canvas>
+                <div class="donut-num" id="donutMonthNum">—</div>
+                <div class="donut-lbl">Monthly Approved</div>
+              </div>
+              <div class="donut-wrap">
+                <canvas id="donutWeek" width="140" height="140"></canvas>
+                <div class="donut-num" id="donutWeekNum">—</div>
+                <div class="donut-lbl">Weekly Approved</div>
+              </div>
+              <div class="bar-wrap">
+                <div class="bar-head">
+                  <h4>Reservations / month</h4>
+                  <span class="yr" id="barYear">—</span>
+                </div>
+                <div class="canvas-box"><canvas id="barChart"></canvas></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Row 2: Today's Guests + Calendar + Counters -->
+        <div class="col-today card" id="today">
+          <div class="card-head navy">
+            Today's Guests <span class="meta" id="todayMeta">—</span>
+          </div>
+          <div class="card-body">
+            <div id="todayList" class="today-list">
+              <div class="empty">Loading reservations…</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-cal card" id="calendar">
+          <div class="card-head">
+            <span>Calendar</span>
+            <div class="cal-nav">
+              <button id="calPrev" aria-label="Previous month">‹</button>
+              <span class="month" id="calMonth">—</span>
+              <button id="calNext" aria-label="Next month">›</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="cal-grid" id="calGrid"></div>
+            <div class="cal-legend">
+              <span class="sw"><span class="box"></span> Has reservation</span>
+              <span class="sw"><span class="box today"></span> Today</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-counters">
+          <div class="counter">
+            <div class="lbl">This Week<b>Accommodated guests</b></div>
+            <div style="text-align:right">
+              <div class="num" id="cWeek">—</div>
+              <div class="sub" id="cWeekRange">—</div>
+            </div>
+          </div>
+          <div class="counter alt">
+            <div class="lbl">This Month<b>Accommodated guests</b></div>
+            <div style="text-align:right">
+              <div class="num" id="cMonth">—</div>
+              <div class="sub" id="cMonthRange">—</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Row 3 -->
+        <div class="col-line card" id="trends">
+          <div class="card-head navy">Most Used Rooms / Cottages <span class="meta" id="lineMeta">Top 5 · last 12 months</span></div>
+          <div class="card-body">
+            <div class="line-wrap"><canvas id="lineChart"></canvas></div>
+          </div>
+        </div>
+      </section>
     </div>
 
-    <section class="content">
-      <!-- Row 1: Data (bar + donuts) -->
-      <div class="col-data card">
-        <div class="card-head navy">Data <span class="meta">Approved reservations</span></div>
-        <div class="card-body">
-          <div class="data-grid">
-            <div class="donut-wrap">
-              <canvas id="donutMonth" width="140" height="140"></canvas>
-              <div class="donut-num" id="donutMonthNum">—</div>
-              <div class="donut-lbl">Monthly Approved</div>
-            </div>
-            <div class="donut-wrap">
-              <canvas id="donutWeek" width="140" height="140"></canvas>
-              <div class="donut-num" id="donutWeekNum">—</div>
-              <div class="donut-lbl">Weekly Approved</div>
-            </div>
-            <div class="bar-wrap">
-              <div class="bar-head">
-                <h4>Reservations / month</h4>
-                <span class="yr" id="barYear">—</span>
+    <!-- ============ RESERVATION VIEW ============ -->
+    <div id="view-reservation" class="view">
+      <div class="res-page">
+        <div class="res-top">
+          <h2>Reservation</h2>
+          <button class="btn-add" id="btnAddRes">Add +</button>
+        </div>
+
+        <div class="res-overview">
+          <div class="yr-label" id="resYear">—</div>
+          <div style="display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap">
+            <div class="res-stats">
+              <div class="res-stat-col">
+                <div class="stat-tile approved"><div class="num" id="rsApproved">0</div></div>
+                <div class="stat-lbl">Approved</div>
               </div>
-              <div class="canvas-box"><canvas id="barChart"></canvas></div>
+              <div class="res-stat-col">
+                <div class="stat-tile pending"><div class="num" id="rsPending">0</div></div>
+                <div class="stat-lbl">Pending</div>
+              </div>
+              <div class="res-stat-col">
+                <div class="stat-tile rejected"><div class="num" id="rsRejected">0</div></div>
+                <div class="stat-lbl">Rejected</div>
+              </div>
+            </div>
+            <div class="res-monthly">
+              <h4>Reservation Monthly</h4>
+              <div class="chart-box"><canvas id="resLineChart"></canvas></div>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- Row 2: Today's Guests + Calendar + Counters -->
-      <div class="col-today card" id="today">
-        <div class="card-head navy">
-          Today's Guests <span class="meta" id="todayMeta">—</span>
-        </div>
-        <div class="card-body">
-          <div id="todayList" class="today-list">
-            <div class="empty">Loading reservations…</div>
+        <div class="res-table-wrap">
+          <div class="res-thead">
+            <div>ID</div><div>Name</div><div>Date IN</div><div>Date OUT</div>
+            <div>Time IN</div><div>Time OUT</div><div>Mobile</div><div>Email</div>
+            <div>Accommodation</div><div>Status</div><div>Proof</div>
+          </div>
+          <div class="res-rows" id="resRows">
+            <div class="empty" style="padding:24px;text-align:center;color:#64748b;font-size:13px">Loading…</div>
           </div>
         </div>
       </div>
-
-      <div class="col-cal card" id="calendar">
-        <div class="card-head">
-          <span>Calendar</span>
-          <div class="cal-nav">
-            <button id="calPrev" aria-label="Previous month">‹</button>
-            <span class="month" id="calMonth">—</span>
-            <button id="calNext" aria-label="Next month">›</button>
-          </div>
-        </div>
-        <div class="card-body">
-          <div class="cal-grid" id="calGrid"></div>
-          <div class="cal-legend">
-            <span class="sw"><span class="box"></span> Has reservation</span>
-            <span class="sw"><span class="box today"></span> Today</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-counters">
-        <div class="counter">
-          <div class="lbl">This Week<b>Accommodated guests</b></div>
-          <div style="text-align:right">
-            <div class="num" id="cWeek">—</div>
-            <div class="sub" id="cWeekRange">—</div>
-          </div>
-        </div>
-        <div class="counter alt">
-          <div class="lbl">This Month<b>Accommodated guests</b></div>
-          <div style="text-align:right">
-            <div class="num" id="cMonth">—</div>
-            <div class="sub" id="cMonthRange">—</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Row 3 -->
-      <div class="col-line card" id="trends">
-        <div class="card-head navy">Most Used Rooms / Cottages <span class="meta" id="lineMeta">Top 5 · last 12 months</span></div>
-        <div class="card-body">
-          <div class="line-wrap"><canvas id="lineChart"></canvas></div>
-        </div>
-      </div>
-    </section>
+    </div>
   </main>
+</div>
+
+<!-- ============ Proof image modal ============ -->
+<div class="modal" id="proofModal">
+  <div class="modal-card">
+    <div class="modal-head">
+      <h3>Proof of Payment</h3>
+      <button class="modal-x" data-close="proofModal">×</button>
+    </div>
+    <div class="modal-body" style="text-align:center">
+      <img id="proofImg" src="" alt="Proof of payment" />
+      <div id="proofFallback" style="display:none;color:#64748b;font-size:13px;padding:20px">No image attached.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ Add Reservation modal ============ -->
+<div class="modal" id="resModal">
+  <div class="modal-card">
+    <div class="modal-head">
+      <h3>New Reservation</h3>
+      <button class="modal-x" data-close="resModal">×</button>
+    </div>
+    <div class="modal-body">
+
+      <div class="rf-section-title">1 · Select Dates</div>
+      <div class="rf-cal">
+        <div class="rf-cal-head">
+          <button id="rfCalPrev" type="button">‹</button>
+          <span class="lbl" id="rfCalLbl">—</span>
+          <button id="rfCalNext" type="button">›</button>
+        </div>
+        <div class="rf-cal-grid" id="rfCalGrid"></div>
+        <div style="display:flex;gap:18px;margin-top:10px;font-size:11.5px;color:#64748b">
+          <span><span style="display:inline-block;width:10px;height:10px;background:var(--orange);border-radius:3px;vertical-align:middle"></span> Selected</span>
+          <span><span style="display:inline-block;width:10px;height:10px;background:#fee2e2;border-radius:3px;vertical-align:middle"></span> Occupied</span>
+        </div>
+      </div>
+
+      <div class="rf-grid" style="margin-top:14px">
+        <div class="rf-field">
+          <label>Check-in date</label>
+          <input type="date" id="rfCheckIn" readonly />
+        </div>
+        <div class="rf-field">
+          <label>Check-out date</label>
+          <input type="date" id="rfCheckOut" readonly />
+        </div>
+        <div class="rf-field">
+          <label>Check-in time</label>
+          <input type="time" id="rfTimeIn" value="14:00" />
+        </div>
+        <div class="rf-field">
+          <label>Check-out time</label>
+          <input type="time" id="rfTimeOut" value="12:00" />
+        </div>
+      </div>
+
+      <div class="rf-section-title">2 · Choose Rooms / Cottages</div>
+      <div class="rf-pick-grid" id="rfPickGrid"></div>
+
+      <div class="rf-section-title">3 · Guest Information</div>
+      <div class="rf-grid">
+        <div class="rf-field"><label>Full Name</label><input type="text" id="rfName" placeholder="Juan Dela Cruz" /></div>
+        <div class="rf-field"><label>Mobile</label><input type="tel" id="rfMobile" placeholder="+63 912 345 6789" /></div>
+        <div class="rf-field"><label>Email</label><input type="email" id="rfEmail" placeholder="email@example.com" /></div>
+        <div class="rf-field"><label>Address</label><input type="text" id="rfAddress" placeholder="City, Province" /></div>
+      </div>
+
+      <div class="rf-section-title">4 · Proof of Payment</div>
+      <div class="rf-field">
+        <label>Upload receipt (image)</label>
+        <input type="file" id="rfFile" accept="image/*" />
+      </div>
+
+      <div class="rf-summary">
+        <div>
+          <div style="font-size:12px;color:#64748b;text-transform:uppercase;letter-spacing:.05em">Total</div>
+          <div id="rfSummary" style="font-size:12.5px;color:#475569;margin-top:2px">No accommodations selected</div>
+        </div>
+        <b id="rfTotal">₱0.00</b>
+      </div>
+
+      <div class="rf-actions">
+        <button class="rf-btn ghost" type="button" data-close="resModal">Cancel</button>
+        <button class="rf-btn primary" id="rfSubmit" type="button">Submit Reservation</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="rf-toast" id="rfToast"></div>
+
+<!-- Loading overlay for submission -->
+<div id="rfLoading" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;align-items:center;justify-content:center;flex-direction:column;color:#fff;font-family:system-ui,sans-serif;">
+  <div style="width:56px;height:56px;border:5px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:spin 1s linear infinite;"></div>
+  <div style="margin-top:14px;font-size:1rem;letter-spacing:.3px;">Submitting reservation…</div>
 </div>
 
 <script>
@@ -254,6 +518,31 @@
                   Name, Mobile, Email, File, Status, Accomodated
    ========================================================= */
 const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1mXEJbzdOHjlrObqO3I5ehe6UigU18CEC6LAUAQ4NzDE/export?format=csv&gid=0";
+/* Replace with your deployed Apps Script Web App URL (the one that handles addReservation/updateStatus) */
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz3aLAcGocOzCMNR_nsaLNK_KCMcHQTSDVNb3TbGCUFfIsMuPEyX3v20NCVJurUvSZg/exec";
+
+/* Extract a viewable image URL from a sheet cell (handles =IMAGE("..."), thumbnail links, file ids) */
+function extractImageUrl(raw){
+  if(!raw) return '';
+  const s=String(raw).trim();
+  if(!s) return '';
+  let m=s.match(/=IMAGE\(\s*"([^"]+)"/i); if(m) return m[1];
+  m=s.match(/https?:\/\/\S+/);             if(m) return m[0];
+  m=s.match(/[-\w]{20,}/);                 if(m) return 'https://drive.google.com/thumbnail?id='+m[0]+'&sz=w800';
+  return '';
+}
+
+/* Catalog mirroring the public site */
+const ACCOMMODATIONS = [
+  {kind:'room',    id:'mercury', name:'Room Mercury', price:750,  pax:2},
+  {kind:'room',    id:'venus',   name:'Room Venus',   price:900,  pax:4},
+  {kind:'room',    id:'earth',   name:'Room Earth',   price:900,  pax:4},
+  {kind:'room',    id:'mars',    name:'Room Mars',    price:1000, pax:6},
+  {kind:'cottage', id:'jupiter', name:'Cottage Jupiter', price:600, pax:8},
+  {kind:'cottage', id:'saturn',  name:'Cottage Saturn',  price:600, pax:8},
+  {kind:'cottage', id:'uranus',  name:'Cottage Uranus',  price:600, pax:8},
+  {kind:'cottage', id:'neptune', name:'Cottage Neptune', price:600, pax:8},
+];
 
 /* ---------- CSV parsing ---------- */
 function parseCSV(text){
@@ -345,17 +634,23 @@ async function loadSheet(){
           iMob=idx('mobile'), iEm=idx('email'), iSt=idx('status'),
           iAc=idx('accomodated');
 
-    state.rows = rows.map(r=>{
+    const iFi=idx('file'), iAd=idx('address');
+
+    state.rows = rows.map((r,i)=>{
       const room=(r[iRoom]||'').trim();
       const start=combineDT(r[iDi], r[iCi]);
       const end=combineDT(r[iDo], r[iCo]) || combineDT(r[iDi], r[iCo]);
       const status=(r[iSt]||'').trim();
       const accommodated=(r[iAc]||'').trim();
+      const fileRaw = iFi>=0 ? (r[iFi]||'') : '';
       return {
+        sheetRow: i+2, // +1 for header, +1 for 1-indexed
         room, start, end,
         name:(r[iName]||'').trim(),
         mobile:(r[iMob]||'').trim(),
         email:(r[iEm]||'').trim(),
+        address: iAd>=0 ? (r[iAd]||'').trim() : '',
+        fileUrl: extractImageUrl(fileRaw),
         status,
         statusKey: status.toLowerCase(),
         accommodated,
@@ -395,6 +690,7 @@ function renderAll(){
   renderCalendar();
   renderApprovalCharts();
   renderLineChart();
+  renderReservation();
 }
 
 /* ---------- Today's Guests ---------- */
@@ -634,6 +930,333 @@ document.getElementById('calNext').addEventListener('click', ()=>{
   state.calCursor = new Date(state.calCursor.getFullYear(), state.calCursor.getMonth()+1, 1);
   renderCalendar();
 });
+
+/* =========================================================
+   ============= RESERVATION VIEW LOGIC =====================
+   ========================================================= */
+
+/* ---------- View switching ---------- */
+document.querySelectorAll('.nav a[data-view]').forEach(a=>{
+  a.addEventListener('click', e=>{
+    e.preventDefault();
+    const v = a.dataset.view;
+    document.querySelectorAll('.nav a').forEach(x=>x.classList.remove('active'));
+    a.classList.add('active');
+    document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
+    document.getElementById('view-'+v).classList.add('active');
+    if(v==='reservation') renderReservation();
+  });
+});
+
+/* ---------- Modal helpers ---------- */
+function openModal(id){ document.getElementById(id).classList.add('show'); }
+function closeModal(id){ document.getElementById(id).classList.remove('show'); }
+document.querySelectorAll('[data-close]').forEach(b=>{
+  b.addEventListener('click', ()=>closeModal(b.dataset.close));
+});
+document.querySelectorAll('.modal').forEach(m=>{
+  m.addEventListener('click', e=>{ if(e.target===m) m.classList.remove('show'); });
+});
+
+/* ---------- Toast ---------- */
+function toast(msg, ms=2400){
+  const t=document.getElementById('rfToast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(toast._t);
+  toast._t=setTimeout(()=>t.classList.remove('show'), ms);
+}
+
+/* ---------- Render Reservation table + stats + chart ---------- */
+let resChart=null;
+function renderReservation(){
+  const yr = new Date().getFullYear();
+  document.getElementById('resYear').textContent = yr;
+  const yrRows = state.rows.filter(r=>r.start && r.start.getFullYear()===yr);
+  const approved = yrRows.filter(r=>r.statusKey==='approved').length;
+  const pending  = yrRows.filter(r=>r.statusKey==='pending' || !r.statusKey).length;
+  const rejected = yrRows.filter(r=>r.statusKey==='rejected').length;
+  document.getElementById('rsApproved').textContent = approved;
+  document.getElementById('rsPending').textContent  = pending;
+  document.getElementById('rsRejected').textContent = rejected;
+
+  // Monthly line chart (total guest reservations per month, current year)
+  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const counts=new Array(12).fill(0);
+  yrRows.forEach(r=>{ counts[r.start.getMonth()]++; });
+  const ctx=document.getElementById('resLineChart');
+  if(ctx){
+    if(resChart) resChart.destroy();
+    resChart = new Chart(ctx,{
+      type:'line',
+      data:{ labels:months, datasets:[{
+        label:'Reservations', data:counts,
+        borderColor:'#E8651F', backgroundColor:'rgba(232,101,31,.12)',
+        tension:.35, borderWidth:2.4, pointRadius:3, pointHoverRadius:5,
+        pointBackgroundColor:'#E8651F', fill:true
+      }]},
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>`${c.parsed.y} reservation${c.parsed.y===1?'':'s'}`}}},
+        scales:{
+          x:{grid:{display:false}, ticks:{color:'#64748B', font:{size:10}}},
+          y:{beginAtZero:true, grid:{color:'#E2E8F0'}, ticks:{color:'#64748B', font:{size:10}, precision:0, stepSize:1}}
+        }
+      }
+    });
+  }
+
+  // Table
+  const wrap=document.getElementById('resRows');
+  if(!state.rows.length){
+    wrap.innerHTML = `<div class="empty" style="padding:24px;text-align:center;color:#64748b;font-size:13px">No reservations yet.</div>`;
+    return;
+  }
+  const sorted = [...state.rows].sort((a,b)=>(b.start?.getTime()||0)-(a.start?.getTime()||0));
+  wrap.innerHTML = sorted.map((r,i)=>{
+    const id = String(r.sheetRow-1).padStart(3,'0');
+    const sk = r.statusKey || 'pending';
+    const cls = sk==='approved'?'approved':(sk==='rejected'?'rejected':'pending');
+    const label = sk.charAt(0).toUpperCase()+sk.slice(1);
+    return `
+      <div class="res-row">
+        <div>${id}</div>
+        <div title="${escapeHtml(r.name)}">${escapeHtml(r.name||'—')}</div>
+        <div>${r.start?fmtDate(r.start):'—'}</div>
+        <div>${r.end?fmtDate(r.end):'—'}</div>
+        <div>${r.start?fmtTime(r.start):'—'}</div>
+        <div>${r.end?fmtTime(r.end):'—'}</div>
+        <div title="${escapeHtml(r.mobile)}">${escapeHtml(r.mobile||'—')}</div>
+        <div title="${escapeHtml(r.email)}">${escapeHtml(r.email||'—')}</div>
+        <div title="${escapeHtml(r.room)}">${escapeHtml(r.room||'—')}</div>
+        <div>
+          <span class="status-pill ${cls}">
+            ${label} <span class="caret">▾</span>
+            <select data-row="${r.sheetRow}" onchange="onStatusChange(this)">
+              <option value="Pending"  ${sk==='pending'?'selected':''}>Pending</option>
+              <option value="Approved" ${sk==='approved'?'selected':''}>Approved</option>
+              <option value="Rejected" ${sk==='rejected'?'selected':''}>Rejected</option>
+            </select>
+          </span>
+        </div>
+        <div style="text-align:center">
+          <button class="eye-btn" onclick="openProof('${encodeURIComponent(r.fileUrl||'')}')" ${r.fileUrl?'':'disabled'} title="${r.fileUrl?'View proof':'No proof attached'}">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+/* ---------- Status update -> Apps Script ---------- */
+async function onStatusChange(sel){
+  const row = sel.dataset.row;
+  const status = sel.value;
+  if(!APPS_SCRIPT_URL || APPS_SCRIPT_URL.startsWith('REPLACE_')){
+    toast('Set APPS_SCRIPT_URL in the HTML to enable status sync');
+    return;
+  }
+  try{
+    await fetch(APPS_SCRIPT_URL, {
+      method:'POST', mode:'no-cors',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify({action:'updateStatus', row:Number(row), status})
+    });
+    toast(`Status set to ${status}`);
+    setTimeout(loadSheet, 600);
+  }catch(e){
+    toast('Failed to update status');
+  }
+}
+
+/* ---------- Proof viewer ---------- */
+function openProof(encUrl){
+  const url = decodeURIComponent(encUrl||'');
+  const img = document.getElementById('proofImg');
+  const fb  = document.getElementById('proofFallback');
+  if(url){ img.src=url; img.style.display='block'; fb.style.display='none'; }
+  else   { img.removeAttribute('src'); img.style.display='none'; fb.style.display='block'; }
+  openModal('proofModal');
+}
+
+/* ---------- Add Reservation form ---------- */
+const rfState = {
+  cursor: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+  checkIn: null,
+  checkOut: null,
+  selecting: 'in',  // 'in' | 'out'
+  picks: new Set(),
+};
+
+function rfRenderCalendar(){
+  const cur = rfState.cursor;
+  document.getElementById('rfCalLbl').textContent =
+    cur.toLocaleDateString(undefined,{month:'long',year:'numeric'});
+  const grid=document.getElementById('rfCalGrid');
+  const dows=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  let html=dows.map(d=>`<div class="dow">${d}</div>`).join('');
+  const first=startOfMonth(cur), last=endOfMonth(cur);
+  const lead=(first.getDay()+6)%7;
+  for(let i=lead;i>0;i--){ const d=new Date(first); d.setDate(d.getDate()-i); html+=`<div class="d muted">${d.getDate()}</div>`; }
+  const today=startOfDay(new Date());
+  for(let day=1; day<=last.getDate(); day++){
+    const d=new Date(cur.getFullYear(),cur.getMonth(),day);
+    const key=ymd(d);
+    const cls=['d'];
+    const isPast = d < today;
+    const occupied = state.bookedDates.has(key) || isPast;
+    if(occupied) cls.push('occupied');
+    if(rfState.checkIn && key===ymd(rfState.checkIn)) cls.push('range-start');
+    if(rfState.checkOut && key===ymd(rfState.checkOut)) cls.push('range-end');
+    if(rfState.checkIn && rfState.checkOut && d>rfState.checkIn && d<rfState.checkOut) cls.push('in-range');
+    html+=`<div class="${cls.join(' ')}" data-d="${key}">${day}</div>`;
+  }
+  const total=lead+last.getDate(); const trail=(7-(total%7))%7;
+  for(let i=1;i<=trail;i++){ const d=new Date(last); d.setDate(d.getDate()+i); html+=`<div class="d muted">${d.getDate()}</div>`; }
+  grid.innerHTML=html;
+
+  grid.querySelectorAll('.d[data-d]').forEach(el=>{
+    if(el.classList.contains('occupied')||el.classList.contains('muted')) return;
+    el.addEventListener('click', ()=>{
+      const [y,m,da]=el.dataset.d.split('-').map(Number);
+      const d=new Date(y,m-1,da);
+      if(rfState.selecting==='in' || (rfState.checkIn && d<=rfState.checkIn)){
+        rfState.checkIn=d; rfState.checkOut=null; rfState.selecting='out';
+      } else {
+        rfState.checkOut=d; rfState.selecting='in';
+      }
+      document.getElementById('rfCheckIn').value  = rfState.checkIn  ? ymd(rfState.checkIn)  : '';
+      document.getElementById('rfCheckOut').value = rfState.checkOut ? ymd(rfState.checkOut) : '';
+      rfRenderCalendar();
+    });
+  });
+}
+
+function rfRenderPicks(){
+  const grid=document.getElementById('rfPickGrid');
+  grid.innerHTML = ACCOMMODATIONS.map(a=>{
+    const sel = rfState.picks.has(a.id) ? 'selected' : '';
+    return `<button type="button" class="rf-pick ${sel}" data-id="${a.id}">
+      <h5>${a.name}</h5>
+      <div class="meta">${a.kind==='room'?'Room':'Cottage'} · ${a.pax} pax</div>
+      <div class="price">₱${a.price.toFixed(2)}</div>
+    </button>`;
+  }).join('');
+  grid.querySelectorAll('.rf-pick').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      const id=b.dataset.id;
+      if(rfState.picks.has(id)) rfState.picks.delete(id); else rfState.picks.add(id);
+      rfRenderPicks(); rfRenderSummary();
+    });
+  });
+}
+
+function rfRenderSummary(){
+  const items = ACCOMMODATIONS.filter(a=>rfState.picks.has(a.id));
+  const nights = (rfState.checkIn && rfState.checkOut)
+    ? Math.max(1, Math.round((rfState.checkOut - rfState.checkIn)/(1000*60*60*24)))
+    : 1;
+  const subtotal = items.reduce((s,a)=>s+a.price,0);
+  const total = subtotal * nights;
+  document.getElementById('rfSummary').textContent =
+    items.length ? `${items.map(i=>i.name).join(', ')} · ${nights} night${nights>1?'s':''}` : 'No accommodations selected';
+  document.getElementById('rfTotal').textContent = '₱'+total.toFixed(2);
+}
+
+function openAddModal(){
+  rfState.checkIn=null; rfState.checkOut=null; rfState.selecting='in'; rfState.picks=new Set();
+  rfState.cursor=new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+  ['rfCheckIn','rfCheckOut','rfName','rfMobile','rfEmail','rfAddress'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('rfFile').value='';
+  rfRenderCalendar(); rfRenderPicks(); rfRenderSummary();
+  openModal('resModal');
+}
+
+document.getElementById('btnAddRes').addEventListener('click', openAddModal);
+document.getElementById('rfCalPrev').addEventListener('click', ()=>{
+  rfState.cursor=new Date(rfState.cursor.getFullYear(), rfState.cursor.getMonth()-1, 1); rfRenderCalendar();
+});
+document.getElementById('rfCalNext').addEventListener('click', ()=>{
+  rfState.cursor=new Date(rfState.cursor.getFullYear(), rfState.cursor.getMonth()+1, 1); rfRenderCalendar();
+});
+['rfCheckIn','rfCheckOut'].forEach(id=>{
+  document.getElementById(id).addEventListener('change', ()=>{
+    const d=document.getElementById(id).value;
+    if(d){ const [y,m,da]=d.split('-').map(Number); const dt=new Date(y,m-1,da);
+      if(id==='rfCheckIn') rfState.checkIn=dt; else rfState.checkOut=dt;
+      rfRenderCalendar(); rfRenderSummary();
+    }
+  });
+});
+
+function fileToBase64(file){
+  return new Promise((res,rej)=>{
+    const r=new FileReader();
+    r.onload=()=>{ const s=String(r.result); res(s.split(',')[1]||s); };
+    r.onerror=rej; r.readAsDataURL(file);
+  });
+}
+
+document.getElementById('rfSubmit').addEventListener('click', submitReservation);
+
+async function submitReservation(){
+  const name=document.getElementById('rfName').value.trim();
+  const mobile=document.getElementById('rfMobile').value.trim();
+  const email=document.getElementById('rfEmail').value.trim();
+  const address=document.getElementById('rfAddress').value.trim();
+  const tIn=document.getElementById('rfTimeIn').value;
+  const tOut=document.getElementById('rfTimeOut').value;
+  const fileEl=document.getElementById('rfFile');
+
+  if(!rfState.checkIn || !rfState.checkOut){ toast('Pick check-in and check-out dates'); return; }
+  if(!rfState.picks.size){ toast('Select at least one room or cottage'); return; }
+  if(!name || !mobile || !email){ toast('Fill name, mobile, and email'); return; }
+
+  if(!APPS_SCRIPT_URL || APPS_SCRIPT_URL.startsWith('REPLACE_')){
+    toast('Set APPS_SCRIPT_URL in the HTML to submit reservations'); return;
+  }
+
+  const items = ACCOMMODATIONS.filter(a=>rfState.picks.has(a.id));
+  const roomsLabel = items.map(i=>i.name).join(', ');
+
+  const payload = {
+    rows: [{
+      'Rooms': roomsLabel,
+      'Date In': ymd(rfState.checkIn),
+      'Check In': tIn,
+      'Check Out': tOut,
+      'Date Out': ymd(rfState.checkOut),
+      'Name': name,
+      'Mobile': mobile,
+      'Email': email,
+      'Address': address,
+      'Status': 'Pending',
+      'Accomodated': 'No'
+    }]
+  };
+
+  if(fileEl.files && fileEl.files[0]){
+    try{
+      const f=fileEl.files[0];
+      payload.file = { name:f.name, mimeType:f.type||'image/jpeg', data: await fileToBase64(f) };
+    }catch(e){ toast('Could not read file'); return; }
+  }
+
+  document.getElementById('rfLoading').style.display='flex';
+  try{
+    await fetch(APPS_SCRIPT_URL, {
+      method:'POST', mode:'no-cors',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify(payload)
+    });
+    toast('Reservation submitted');
+    closeModal('resModal');
+    setTimeout(loadSheet, 800);
+  }catch(e){
+    toast('Submit failed');
+  } finally {
+    document.getElementById('rfLoading').style.display='none';
+  }
+}
 
 /* ---------- Boot ---------- */
 loadSheet();
