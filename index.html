@@ -517,7 +517,10 @@
    Sheet columns: Rooms, Date In, Check In, Check Out, Date Out,
                   Name, Mobile, Email, File, Status, Accomodated
    ========================================================= */
-const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1mXEJbzdOHjlrObqO3I5ehe6UigU18CEC6LAUAQ4NzDE/export?format=csv&gid=0";
+const SHEET_ID = "1mXEJbzdOHjlrObqO3I5ehe6UigU18CEC6LAUAQ4NzDE";
+const SHEET_GID = "0";
+const SHEET_CSV_URL  = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${SHEET_GID}`;
+const SHEET_HTML_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=html&gid=${SHEET_GID}`;
 /* Replace with your deployed Apps Script Web App URL (the one that handles addReservation/updateStatus) */
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz3aLAcGocOzCMNR_nsaLNK_KCMcHQTSDVNb3TbGCUFfIsMuPEyX3v20NCVJurUvSZg/exec";
 
@@ -646,12 +649,57 @@ const state = {
   calCursor: startOfMonth(new Date()),
 };
 
+/* ---------- Fetch File-column URLs from the sheet's HTML export ----------
+   The CSV export drops =IMAGE(), uploaded-file refs and hyperlinks. The HTML
+   export preserves them as <img src> / <a href>. We parse it and return a map
+   of sheetRow (1-indexed, header = row 1) -> image URL. */
+async function fetchFileColumnFromHtml(){
+  try{
+    const url = SHEET_HTML_URL + '&_=' + Date.now();
+    const res = await fetch(url, {cache:'no-store'});
+    if(!res.ok) return {};
+    const html = await res.text();
+    const doc  = new DOMParser().parseFromString(html, 'text/html');
+    const table = doc.querySelector('table');
+    if(!table) return {};
+    const rowEls = Array.from(table.querySelectorAll('tr'));
+    if(!rowEls.length) return {};
+
+    // Find the "File" header column (skip leading freeze/index cells)
+    const headerCells = Array.from(rowEls[0].children);
+    let fileColIdx = -1;
+    headerCells.forEach((td, i) => {
+      if(String(td.textContent||'').trim().toLowerCase() === 'file') fileColIdx = i;
+    });
+    if(fileColIdx < 0) return {};
+
+    const map = {};
+    for(let r = 1; r < rowEls.length; r++){
+      const cells = Array.from(rowEls[r].children);
+      const cell  = cells[fileColIdx];
+      if(!cell) continue;
+      const img = cell.querySelector('img');
+      const a   = cell.querySelector('a');
+      const raw = (img && img.getAttribute('src')) || (a && a.getAttribute('href')) || cell.textContent || '';
+      const found = extractImageUrl(raw);
+      if(found) map[r + 1] = found; // sheetRow is 1-indexed incl. header
+    }
+    return map;
+  } catch(e){
+    console.warn('HTML export parse failed', e);
+    return {};
+  }
+}
+
 /* ---------- Load ---------- */
 async function loadSheet(){
   setSync('loading','Syncing with Google Sheets…');
   try{
     const url = SHEET_CSV_URL + (SHEET_CSV_URL.includes('?')?'&':'?') + '_=' + Date.now();
-    const res = await fetch(url,{cache:'no-store'});
+    const [res, fileMap] = await Promise.all([
+      fetch(url,{cache:'no-store'}),
+      fetchFileColumnFromHtml(),
+    ]);
     if(!res.ok) throw new Error('HTTP '+res.status);
     const txt = await res.text();
     const rows = parseCSV(txt).filter(r=>r.length>=4 && r.some(c=>String(c||'').trim()));
@@ -671,8 +719,9 @@ async function loadSheet(){
       const end=combineDT(r[iDo], r[iCo]) || combineDT(r[iDi], r[iCo]);
       const status=(r[iSt]||'').trim();
       const accommodated=(r[iAc]||'').trim();
+      const sheetRow = i + 2;
       const fileRaw = iFi>=0 ? (r[iFi]||'') : '';
-      const fileUrl = findImageUrlInRow(r, iFi);
+      const fileUrl = fileMap[sheetRow] || findImageUrlInRow(r, iFi);
       return {
         sheetRow: i+2, // +1 for header, +1 for 1-indexed
         room, start, end,
@@ -1120,9 +1169,9 @@ async function openProof(encUrl, row){
   openModal('proofModal');
   if(!url){
     img.removeAttribute('src'); img.style.display='none';
-    fb.style.display='block'; fb.innerHTML='Loading proof…';
-    url = await getProofUrlFromScript(row);
-    if(!url){ fb.innerHTML='No image attached in the File column.'; return; }
+    fb.style.display='block';
+    fb.innerHTML='No image attached in the File column.';
+    return;
   }
   // Build fallback chain for Drive
   const idMatch = url.match(/[?&]id=([-\w]{20,})/) || url.match(/\/file\/d\/([-\w]{20,})/);
