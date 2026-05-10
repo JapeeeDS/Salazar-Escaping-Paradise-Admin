@@ -521,21 +521,23 @@ const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1mXEJbzdOHjlrObqO3
 /* Replace with your deployed Apps Script Web App URL (the one that handles addReservation/updateStatus) */
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz3aLAcGocOzCMNR_nsaLNK_KCMcHQTSDVNb3TbGCUFfIsMuPEyX3v20NCVJurUvSZg/exec";
 
-/* Extract a viewable image URL from a sheet cell (handles =IMAGE("..."), thumbnail links, file ids) */
+/* Extract a viewable image URL from a sheet cell (handles =IMAGE("..."), HYPERLINK("..."), thumbnail links, file ids) */
 function extractImageUrl(raw){
   if(!raw) return '';
   const s=String(raw).trim();
   if(!s) return '';
   // 1) =IMAGE("url")
   let m=s.match(/=IMAGE\(\s*"([^"]+)"/i); if(m) return toDriveThumb(m[1]);
-  // 2) Any Drive id we can spot in the cell (file/d/ID, id=ID, open?id=ID, uc?id=ID, thumbnail?id=ID)
+  // 2) =HYPERLINK("url", "label")
+  m=s.match(/=HYPERLINK\(\s*"([^"]+)"/i); if(m) return toDriveThumb(m[1]);
+  // 3) Any Drive id we can spot in the cell (file/d/ID, id=ID, open?id=ID, uc?id=ID, thumbnail?id=ID)
   m=s.match(/\/file\/d\/([-\w]{20,})/i)
     || s.match(/[?&]id=([-\w]{20,})/i)
     || s.match(/\/d\/([-\w]{20,})/i);
   if(m) return 'https://drive.google.com/thumbnail?id='+m[1]+'&sz=w1600';
-  // 3) Plain http(s) URL
-  m=s.match(/https?:\/\/\S+/); if(m) return toDriveThumb(m[0]);
-  // 4) Bare id
+  // 4) Plain http(s) URL
+  m=s.match(/https?:\/\/[^\s,)"']+/); if(m) return toDriveThumb(m[0]);
+  // 5) Bare id
   m=s.match(/^[-\w]{20,}$/);   if(m) return 'https://drive.google.com/thumbnail?id='+m[0]+'&sz=w1600';
   return '';
 }
@@ -546,6 +548,17 @@ function toDriveThumb(url){
          || url.match(/\/d\/([-\w]{20,})/i);
   if(m) return 'https://drive.google.com/thumbnail?id='+m[1]+'&sz=w1600';
   return url;
+}
+function findImageUrlInRow(row, preferredIndex){
+  if(preferredIndex>=0){
+    const preferred = extractImageUrl(row[preferredIndex]||'');
+    if(preferred) return preferred;
+  }
+  for(const cell of row){
+    const found = extractImageUrl(cell||'');
+    if(found) return found;
+  }
+  return '';
 }
 
 /* Catalog mirroring the public site */
@@ -659,6 +672,7 @@ async function loadSheet(){
       const status=(r[iSt]||'').trim();
       const accommodated=(r[iAc]||'').trim();
       const fileRaw = iFi>=0 ? (r[iFi]||'') : '';
+      const fileUrl = findImageUrlInRow(r, iFi);
       return {
         sheetRow: i+2, // +1 for header, +1 for 1-indexed
         room, start, end,
@@ -666,7 +680,8 @@ async function loadSheet(){
         mobile:(r[iMob]||'').trim(),
         email:(r[iEm]||'').trim(),
         address: iAd>=0 ? (r[iAd]||'').trim() : '',
-        fileUrl: extractImageUrl(fileRaw),
+        fileUrl,
+        fileRaw,
         status,
         statusKey: status.toLowerCase(),
         accommodated,
@@ -1055,7 +1070,7 @@ function renderReservation(){
           </span>
         </div>
         <div style="text-align:center">
-          <button class="eye-btn" onclick="openProof('${encodeURIComponent(r.fileUrl||'')}')" ${r.fileUrl?'':'disabled'} title="${r.fileUrl?'View proof':'No proof attached'}">
+          <button class="eye-btn" onclick="openProof('${encodeURIComponent(r.fileUrl||'')}', ${r.sheetRow})" title="View proof">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
           </button>
         </div>
@@ -1085,15 +1100,29 @@ async function onStatusChange(sel){
 }
 
 /* ---------- Proof viewer ---------- */
-function openProof(encUrl){
+async function getProofUrlFromScript(row){
+  if(!row || !APPS_SCRIPT_URL || APPS_SCRIPT_URL.startsWith('REPLACE_')) return '';
+  try{
+    const sep = APPS_SCRIPT_URL.includes('?') ? '&' : '?';
+    const res = await fetch(APPS_SCRIPT_URL + sep + 'action=getProof&row=' + encodeURIComponent(row), {cache:'no-store'});
+    if(!res.ok) return '';
+    const data = await res.json();
+    return extractImageUrl(data.url || data.fileUrl || data.file || data.proof || '');
+  }catch(e){
+    return '';
+  }
+}
+
+async function openProof(encUrl, row){
   let url = decodeURIComponent(encUrl||'');
   const img = document.getElementById('proofImg');
   const fb  = document.getElementById('proofFallback');
   openModal('proofModal');
   if(!url){
     img.removeAttribute('src'); img.style.display='none';
-    fb.style.display='block'; fb.innerHTML='No image attached.';
-    return;
+    fb.style.display='block'; fb.innerHTML='Loading proof…';
+    url = await getProofUrlFromScript(row);
+    if(!url){ fb.innerHTML='No image attached in the File column.'; return; }
   }
   // Build fallback chain for Drive
   const idMatch = url.match(/[?&]id=([-\w]{20,})/) || url.match(/\/file\/d\/([-\w]{20,})/);
