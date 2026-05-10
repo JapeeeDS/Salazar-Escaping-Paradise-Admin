@@ -1070,11 +1070,24 @@ async function onStatusChange(sel){
 
 /* ---------- Proof viewer ---------- */
 function openProof(encUrl){
-  const url = decodeURIComponent(encUrl||'');
+  let url = decodeURIComponent(encUrl||'');
+  // Upgrade Drive thumbnails to a bigger size for the popup
+  if(url){
+    url = url.replace(/([?&]sz=)w\d+/i, '$1w1600');
+    // If it's a /thumbnail?id= URL without sz, add one
+    if(/drive\.google\.com\/thumbnail/i.test(url) && !/[?&]sz=/.test(url)){
+      url += (url.includes('?')?'&':'?') + 'sz=w1600';
+    }
+  }
   const img = document.getElementById('proofImg');
   const fb  = document.getElementById('proofFallback');
-  if(url){ img.src=url; img.style.display='block'; fb.style.display='none'; }
-  else   { img.removeAttribute('src'); img.style.display='none'; fb.style.display='block'; }
+  if(url){
+    img.src=url; img.style.display='block'; fb.style.display='none';
+    img.onerror = ()=>{ img.style.display='none'; fb.style.display='block'; fb.textContent='Could not load image. Open in Drive: '+url; };
+  } else {
+    img.removeAttribute('src'); img.style.display='none'; fb.style.display='block';
+    fb.textContent='No image attached.';
+  }
   openModal('proofModal');
 }
 
