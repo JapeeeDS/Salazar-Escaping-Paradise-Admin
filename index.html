@@ -1167,10 +1167,17 @@ async function openProof(encUrl, row){
   const img = document.getElementById('proofImg');
   const fb  = document.getElementById('proofFallback');
   openModal('proofModal');
+  // CSV/HTML exports hide File-column uploads, so fall back to Apps Script
+  if(!url && row){
+    fb.style.display='block';
+    fb.innerHTML='Loading proof…';
+    img.style.display='none';
+    url = await getProofUrlFromScript(row);
+  }
   if(!url){
     img.removeAttribute('src'); img.style.display='none';
     fb.style.display='block';
-    fb.innerHTML='No image attached in the File column.';
+    fb.innerHTML='No image found. Make sure your Apps Script has the <code>getProof</code> action and the file is shared “Anyone with the link”.';
     return;
   }
   // Build fallback chain for Drive
