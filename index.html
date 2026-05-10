@@ -526,10 +526,26 @@ function extractImageUrl(raw){
   if(!raw) return '';
   const s=String(raw).trim();
   if(!s) return '';
-  let m=s.match(/=IMAGE\(\s*"([^"]+)"/i); if(m) return m[1];
-  m=s.match(/https?:\/\/\S+/);             if(m) return m[0];
-  m=s.match(/[-\w]{20,}/);                 if(m) return 'https://drive.google.com/thumbnail?id='+m[0]+'&sz=w800';
+  // 1) =IMAGE("url")
+  let m=s.match(/=IMAGE\(\s*"([^"]+)"/i); if(m) return toDriveThumb(m[1]);
+  // 2) Any Drive id we can spot in the cell (file/d/ID, id=ID, open?id=ID, uc?id=ID, thumbnail?id=ID)
+  m=s.match(/\/file\/d\/([-\w]{20,})/i)
+    || s.match(/[?&]id=([-\w]{20,})/i)
+    || s.match(/\/d\/([-\w]{20,})/i);
+  if(m) return 'https://drive.google.com/thumbnail?id='+m[1]+'&sz=w1600';
+  // 3) Plain http(s) URL
+  m=s.match(/https?:\/\/\S+/); if(m) return toDriveThumb(m[0]);
+  // 4) Bare id
+  m=s.match(/^[-\w]{20,}$/);   if(m) return 'https://drive.google.com/thumbnail?id='+m[0]+'&sz=w1600';
   return '';
+}
+function toDriveThumb(url){
+  if(!url) return '';
+  const m = url.match(/\/file\/d\/([-\w]{20,})/i)
+         || url.match(/[?&]id=([-\w]{20,})/i)
+         || url.match(/\/d\/([-\w]{20,})/i);
+  if(m) return 'https://drive.google.com/thumbnail?id='+m[1]+'&sz=w1600';
+  return url;
 }
 
 /* Catalog mirroring the public site */
@@ -1071,24 +1087,36 @@ async function onStatusChange(sel){
 /* ---------- Proof viewer ---------- */
 function openProof(encUrl){
   let url = decodeURIComponent(encUrl||'');
-  // Upgrade Drive thumbnails to a bigger size for the popup
-  if(url){
-    url = url.replace(/([?&]sz=)w\d+/i, '$1w1600');
-    // If it's a /thumbnail?id= URL without sz, add one
-    if(/drive\.google\.com\/thumbnail/i.test(url) && !/[?&]sz=/.test(url)){
-      url += (url.includes('?')?'&':'?') + 'sz=w1600';
-    }
-  }
   const img = document.getElementById('proofImg');
   const fb  = document.getElementById('proofFallback');
-  if(url){
-    img.src=url; img.style.display='block'; fb.style.display='none';
-    img.onerror = ()=>{ img.style.display='none'; fb.style.display='block'; fb.textContent='Could not load image. Open in Drive: '+url; };
-  } else {
-    img.removeAttribute('src'); img.style.display='none'; fb.style.display='block';
-    fb.textContent='No image attached.';
-  }
   openModal('proofModal');
+  if(!url){
+    img.removeAttribute('src'); img.style.display='none';
+    fb.style.display='block'; fb.innerHTML='No image attached.';
+    return;
+  }
+  // Build fallback chain for Drive
+  const idMatch = url.match(/[?&]id=([-\w]{20,})/) || url.match(/\/file\/d\/([-\w]{20,})/);
+  const id = idMatch ? idMatch[1] : null;
+  const tries = [];
+  tries.push(url);
+  if(id){
+    tries.push('https://drive.google.com/thumbnail?id='+id+'&sz=w1600');
+    tries.push('https://lh3.googleusercontent.com/d/'+id+'=w1600');
+    tries.push('https://drive.google.com/uc?export=view&id='+id);
+  }
+  let i = 0;
+  const open = id ? 'https://drive.google.com/file/d/'+id+'/view' : url;
+  fb.style.display='none';
+  img.style.display='block';
+  img.onerror = ()=>{
+    i++;
+    if(i < tries.length){ img.src = tries[i]; return; }
+    img.style.display='none';
+    fb.style.display='block';
+    fb.innerHTML = 'Could not preview image. <a href="'+open+'" target="_blank" rel="noopener" style="color:var(--orange);text-decoration:underline">Open in Google Drive</a>';
+  };
+  img.src = tries[0];
 }
 
 /* ---------- Add Reservation form ---------- */
