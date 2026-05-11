@@ -1096,6 +1096,7 @@ function renderReservation(){
   const sorted = [...state.rows].sort((a,b)=>(b.start?.getTime()||0)-(a.start?.getTime()||0));
   wrap.innerHTML = sorted.map((r,i)=>{
     const id = r.resId || ('SEP-' + String(r.sheetRow-1).padStart(4,'0'));
+    const sk = r.statusKey || 'pending';
     const isApproved = sk==='approved';
     const cls = isApproved ? 'approved' : (sk==='rejected' || sk==='not approved' ? 'rejected' : 'pending');
     const label = isApproved ? 'Approved' : (sk==='pending' || !sk ? 'Pending' : 'Not Approved');
