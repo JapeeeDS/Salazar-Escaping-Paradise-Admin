@@ -712,6 +712,7 @@ async function loadSheet(){
           iAc=idx('accomodated');
 
     const iFi=idx('file'), iAd=idx('address');
+    const iId = idx('id') >=0 ? idx('id') : (idx('reservation id') >=0 ? idx('reservation id') : idx('reservationid'));
 
     state.rows = rows.map((r,i)=>{
       const room=(r[iRoom]||'').trim();
@@ -724,6 +725,7 @@ async function loadSheet(){
       const fileUrl = fileMap[sheetRow] || findImageUrlInRow(r, iFi);
       return {
         sheetRow: i+2, // +1 for header, +1 for 1-indexed
+        resId: iId>=0 ? String(r[iId]||'').trim() : '',
         room, start, end,
         name:(r[iName]||'').trim(),
         mobile:(r[iMob]||'').trim(),
@@ -1093,13 +1095,13 @@ function renderReservation(){
   }
   const sorted = [...state.rows].sort((a,b)=>(b.start?.getTime()||0)-(a.start?.getTime()||0));
   wrap.innerHTML = sorted.map((r,i)=>{
-    const id = String(r.sheetRow-1).padStart(3,'0');
-    const sk = r.statusKey || 'pending';
-    const cls = sk==='approved'?'approved':(sk==='rejected'?'rejected':'pending');
-    const label = sk.charAt(0).toUpperCase()+sk.slice(1);
+    const id = r.resId || ('SEP-' + String(r.sheetRow-1).padStart(4,'0'));
+    const isApproved = sk==='approved';
+    const cls = isApproved ? 'approved' : (sk==='rejected' || sk==='not approved' ? 'rejected' : 'pending');
+    const label = isApproved ? 'Approved' : (sk==='pending' || !sk ? 'Pending' : 'Not Approved');
     return `
       <div class="res-row">
-        <div>${id}</div>
+        <div title="${escapeHtml(id)}">${escapeHtml(id)}</div>
         <div title="${escapeHtml(r.name)}">${escapeHtml(r.name||'—')}</div>
         <div>${r.start?fmtDate(r.start):'—'}</div>
         <div>${r.end?fmtDate(r.end):'—'}</div>
@@ -1112,9 +1114,8 @@ function renderReservation(){
           <span class="status-pill ${cls}">
             ${label} <span class="caret">▾</span>
             <select data-row="${r.sheetRow}" onchange="onStatusChange(this)">
-              <option value="Pending"  ${sk==='pending'?'selected':''}>Pending</option>
-              <option value="Approved" ${sk==='approved'?'selected':''}>Approved</option>
-              <option value="Rejected" ${sk==='rejected'?'selected':''}>Rejected</option>
+              <option value="Approved"     ${isApproved?'selected':''}>Approved</option>
+              <option value="Not Approved" ${!isApproved && sk?'selected':''}>Not Approved</option>
             </select>
           </span>
         </div>
