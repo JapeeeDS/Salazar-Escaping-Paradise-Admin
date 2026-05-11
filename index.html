@@ -564,6 +564,28 @@ function findImageUrlInRow(row, preferredIndex){
   return '';
 }
 
+function callAppsScriptJsonp(params, timeoutMs=12000){
+  return new Promise((resolve, reject)=>{
+    if(!APPS_SCRIPT_URL || APPS_SCRIPT_URL.startsWith('REPLACE_')){
+      reject(new Error('Missing Apps Script URL'));
+      return;
+    }
+    const cb = '__salazar_cb_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+    const script = document.createElement('script');
+    const cleanup = ()=>{
+      clearTimeout(timer);
+      delete window[cb];
+      script.remove();
+    };
+    window[cb] = data=>{ cleanup(); resolve(data || {}); };
+    const q = new URLSearchParams({...params, callback: cb, _: Date.now()});
+    script.src = APPS_SCRIPT_URL + (APPS_SCRIPT_URL.includes('?') ? '&' : '?') + q.toString();
+    script.onerror = ()=>{ cleanup(); reject(new Error('Apps Script request failed')); };
+    const timer = setTimeout(()=>{ cleanup(); reject(new Error('Apps Script timed out')); }, timeoutMs);
+    document.head.appendChild(script);
+  });
+}
+
 /* Catalog mirroring the public site */
 const ACCOMMODATIONS = [
   {kind:'room',    id:'mercury', name:'Room Mercury', price:750,  pax:2},
@@ -1056,7 +1078,7 @@ function renderReservation(){
   const yrRows = state.rows.filter(r=>r.start && r.start.getFullYear()===yr);
   const approved = yrRows.filter(r=>r.statusKey==='approved').length;
   const pending  = yrRows.filter(r=>r.statusKey==='pending' || !r.statusKey).length;
-  const rejected = yrRows.filter(r=>r.statusKey==='rejected').length;
+  const rejected = yrRows.filter(r=>r.statusKey==='rejected' || r.statusKey==='not approved').length;
   document.getElementById('rsApproved').textContent = approved;
   document.getElementById('rsPending').textContent  = pending;
   document.getElementById('rsRejected').textContent = rejected;
@@ -1098,8 +1120,9 @@ function renderReservation(){
     const id = r.resId || ('SEP-' + String(r.sheetRow-1).padStart(4,'0'));
     const sk = r.statusKey || 'pending';
     const isApproved = sk==='approved';
-    const cls = isApproved ? 'approved' : (sk==='rejected' || sk==='not approved' ? 'rejected' : 'pending');
-    const label = isApproved ? 'Approved' : (sk==='pending' || !sk ? 'Pending' : 'Not Approved');
+    const isNotApproved = sk==='not approved' || sk==='rejected';
+    const cls = isApproved ? 'approved' : (isNotApproved ? 'rejected' : 'pending');
+    const label = isApproved ? 'Approved' : (isNotApproved ? 'Not Approved' : 'Pending');
     return `
       <div class="res-row">
         <div title="${escapeHtml(id)}">${escapeHtml(id)}</div>
@@ -1115,13 +1138,14 @@ function renderReservation(){
           <span class="status-pill ${cls}">
             ${label} <span class="caret">▾</span>
             <select data-row="${r.sheetRow}" onchange="onStatusChange(this)">
+              <option value="" disabled ${!isApproved && !isNotApproved?'selected':''}>Pending</option>
               <option value="Approved"     ${isApproved?'selected':''}>Approved</option>
-              <option value="Not Approved" ${!isApproved && sk?'selected':''}>Not Approved</option>
+              <option value="Not Approved" ${isNotApproved?'selected':''}>Not Approved</option>
             </select>
           </span>
         </div>
         <div style="text-align:center">
-          <button class="eye-btn" onclick="openProof('${encodeURIComponent(r.fileUrl||'')}', ${r.sheetRow})" title="View proof">
+          <button class="eye-btn" onclick="openProof('${encodeURIComponent(r.fileUrl||'')}', ${r.sheetRow}, '${encodeURIComponent(id)}')" title="View proof">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
           </button>
         </div>
@@ -1133,39 +1157,49 @@ function renderReservation(){
 async function onStatusChange(sel){
   const row = sel.dataset.row;
   const status = sel.value;
+  if(!status) return;
   if(!APPS_SCRIPT_URL || APPS_SCRIPT_URL.startsWith('REPLACE_')){
     toast('Set APPS_SCRIPT_URL in the HTML to enable status sync');
     return;
   }
+  const record = state.rows.find(r=>String(r.sheetRow)===String(row));
+  if(record){
+    record.status = status;
+    record.statusKey = status.toLowerCase();
+    renderReservation();
+  }
   try{
-    await fetch(APPS_SCRIPT_URL, {
-      method:'POST', mode:'no-cors',
-      headers:{'Content-Type':'text/plain;charset=utf-8'},
-      body: JSON.stringify({action:'updateStatus', row:Number(row), status})
-    });
+    try{
+      await callAppsScriptJsonp({action:'updateStatus', row:Number(row), id: record ? record.resId : '', status});
+    }catch(jsonpError){
+      await fetch(APPS_SCRIPT_URL, {
+        method:'POST', mode:'no-cors',
+        headers:{'Content-Type':'text/plain;charset=utf-8'},
+        body: JSON.stringify({action:'updateStatus', row:Number(row), id: record ? record.resId : '', status})
+      });
+    }
     toast(`Status set to ${status}`);
-    setTimeout(loadSheet, 600);
+    setTimeout(loadSheet, 1200);
   }catch(e){
     toast('Failed to update status');
+    setTimeout(loadSheet, 600);
   }
 }
 
 /* ---------- Proof viewer ---------- */
-async function getProofUrlFromScript(row){
+async function getProofUrlFromScript(row, id){
   if(!row || !APPS_SCRIPT_URL || APPS_SCRIPT_URL.startsWith('REPLACE_')) return '';
   try{
-    const sep = APPS_SCRIPT_URL.includes('?') ? '&' : '?';
-    const res = await fetch(APPS_SCRIPT_URL + sep + 'action=getProof&row=' + encodeURIComponent(row), {cache:'no-store'});
-    if(!res.ok) return '';
-    const data = await res.json();
+    const data = await callAppsScriptJsonp({action:'getProof', row:Number(row), id: id || ''});
     return extractImageUrl(data.url || data.fileUrl || data.file || data.proof || '');
   }catch(e){
     return '';
   }
 }
 
-async function openProof(encUrl, row){
+async function openProof(encUrl, row, encId){
   let url = decodeURIComponent(encUrl||'');
+  const reservationId = decodeURIComponent(encId||'');
   const img = document.getElementById('proofImg');
   const fb  = document.getElementById('proofFallback');
   openModal('proofModal');
@@ -1174,7 +1208,7 @@ async function openProof(encUrl, row){
     fb.style.display='block';
     fb.innerHTML='Loading proof…';
     img.style.display='none';
-    url = await getProofUrlFromScript(row);
+    url = await getProofUrlFromScript(row, reservationId);
   }
   if(!url){
     img.removeAttribute('src'); img.style.display='none';
